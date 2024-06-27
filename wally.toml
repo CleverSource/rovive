@@ -1,0 +1,9 @@
+[package]
+name = "ryan/rovive"
+version = "0.1.0"
+registry = "https://github.com/UpliftGames/wally-index"
+realm = "shared"
+
+[dependencies]
+Iris = "michael-48/iris@2.2.0"
+Net = "vorlias/net@3.0.7"

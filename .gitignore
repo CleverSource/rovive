@@ -1,0 +1,10 @@
+# Project place file
+/rovive.rbxlx
+
+# Roblox Studio lock files
+/*.rbxlx.lock
+/*.rbxl.lock
+
+# Wally
+/Packages
+/*.lock

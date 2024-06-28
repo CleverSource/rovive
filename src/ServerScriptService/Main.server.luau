@@ -84,6 +84,7 @@ do
                     hitHumanoid:TakeDamage(weaponData.PlayerDamage)
                 end
             else
+                -- TODO: bug, can't shoot behind an enemy
                 warn(`Bad tolerance: {tolerance} | {(claimedPosition - expectedRaycast.Position).Magnitude}`)
             end
         end

@@ -7,11 +7,15 @@ local ItemData = {
     ["Double Barrel"] = {
         Equipable = true,
         WeaponType = "Gun", -- Bow, Gun, Melee,
-        FireRate = 0.4
+        BulletPattern = "Spread", -- Single, Spread
+        BulletSpread = 0.03, -- If spread, how much spread outwards (radius)
+        BulletSpeed = 80, -- Measured in meters/sec
+        FireRate = 0.4 -- Rate of fire in seconds
     }
 }
 
 export type WeaponType = "Bow" | "Gun" | "Melee"
+export type BulletPattern = "Spread" | "Single"
 
 for itemName, itemData in ItemData do
     itemData.Name = itemName

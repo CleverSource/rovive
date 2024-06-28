@@ -14,12 +14,18 @@ local Spring = require(ReplicatedStorage.Modules.Spring)
 -- Assets
 local Assets = ReplicatedStorage.Assets
 local Tools = Assets.Tools
+local ShootingEffects = Assets.ShootingEffects
+
+-- Utility
+local RandomNum = require(ReplicatedStorage.Modules.RandomNum)
+local GetStaticDataModule = require(ReplicatedStorage.Modules.GetStaticData)
 
 -- Player State
 local PlayerStateController = require(script.Parent.Parent.PlayerStateController)
 
 -- Systems
 local InputSystem = require(script.Parent.InputSystem)
+local LocalEffectsSystem = require(ReplicatedStorage.Systems.LocalEffectsSystem)
 
 -- Constants
 local VIEWMODEL_TEXTURE_ID = "rbxassetid://18239537672"
@@ -44,17 +50,21 @@ local ToolSystem = {
 }
 
 function ToolSystem:GetStaticData()
-    if self.CurrentItem then
-        return GameItemData[self.CurrentItem.Name]
-    else
-        return nil
-    end
+    if not self.CurrentItem then return nil end
+    return GetStaticDataModule(self.CurrentItem.Name)
 end
 
 function ToolSystem:GetWeaponType(): () -> GameItemData.WeaponType
     local staticData = self:GetStaticData()
     if staticData then
         return staticData.WeaponType
+    end
+end
+
+function ToolSystem:GetBulletPattern(): () -> GameItemData.BulletPattern
+    local staticData = self:GetStaticData()
+    if staticData then
+        return staticData.BulletPattern
     end
 end
 
@@ -117,6 +127,11 @@ function ToolSystem:SetupToolForEquip(item: ItemData.ItemData)
     tool.Parent = viewModel
     tool.RightArmWeld.Part0 = viewModel.RightArm
     tool.RightArmWeld.Part1 = tool.PrimaryPart
+
+    for _, effect in ShootingEffects:GetChildren() do
+        effect = effect:Clone()
+        effect.Parent = tool.ShootingPoint
+    end
     
     self.SidewaysOffset = tool.ScreenCenter.CFrame.X - viewModel.HumanoidRootPart.CFrame.X
     self.VerticalOffset = tool.ScreenCenter.CFrame.Y - viewModel.HumanoidRootPart.CFrame.Y
@@ -202,12 +217,39 @@ function ToolSystem:IsReadyToFire()
     return InputSystem:IsStateActive("Fire") == true and tick() - self.LastFireTick > staticData.FireRate
 end
 
-function ToolSystem:Fire(originOffset, hipFire, elapse)
-    if PlayerStateController.IsAlive == false then return end
+function ToolSystem:Fire(originOffset, elapse)
+    if PlayerStateController.IsAlive == false or self.CurrentItem == nil then return end
     self.LastFireTick = tick()
     InputSystem:ForceStopAction("Fire")
+    
+    local staticData = self:GetStaticData()
+    local bulletPattern = staticData.BulletPattern
+    local isHipFire = InputSystem:IsStateActive("Aim") == false
 
-    print("Shoot gun")
+    -- TODO: ammo check
+    self:PlayAnimation("Shoot")
+    self.CurrentTool.ShootingPoint.Fire:Emit(8)
+    self.CurrentTool.ShootingPoint.MuzzlePuff:Emit(20)
+
+    -- Handle shooting and local hit detection
+    -- Local hit detection is useful to save the server from handling requests.
+    if self:GetWeaponType() == "Gun" then
+        if bulletPattern == "Spread" then
+            local spreadAmount = staticData.BulletSpread * 100
+            local bulletOrigin = isHipFire and self.CurrentTool.ShootingPoint.CFrame or Camera.CFrame
+            local shootingAngle = math.rad(bulletOrigin.LookVector.Y * 90)
+            local spreadData = {}
+
+            for _ = 1, 6 do
+                local spread = Vector3.new(RandomNum(-spreadAmount, spreadAmount) / 100, RandomNum(-spreadAmount, spreadAmount) / 100, RandomNum(-spreadAmount, spreadAmount) / 100)
+                table.insert(spreadData, spread)
+            end
+
+            LocalEffectsSystem:ProjectileShoot(Player, self.CurrentItem, shootingAngle, bulletOrigin, spreadData)
+        elseif bulletPattern == "Single" then
+            print("Implement single bullet pattern")
+        end
+    end
 end
 
 return ToolSystem

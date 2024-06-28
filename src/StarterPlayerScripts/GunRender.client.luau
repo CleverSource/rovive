@@ -74,25 +74,32 @@ local function CalculateViewModelOffset()
 end
 
 -- Handle equipped items
-Player:GetAttributeChangedSignal("EquippedSlot"):Connect(function()
-    local newSlot = Player:GetAttribute("EquippedSlot")
-    if newSlot ~= nil then
-        if not PlayerStateController.Humanoid or PlayerStateController.Humanoid.Health <= 0 or not PlayerStateController.IsAlive then
-            return
+do
+    local function equipActiveSlotAttribute()
+        local newSlot = Player:GetAttribute("EquippedSlot")
+        if newSlot ~= nil then
+            if not PlayerStateController.Humanoid or PlayerStateController.Humanoid.Health <= 0 or not PlayerStateController.IsAlive then
+                return
+            end
+
+            local item = InventorySystem:GetItemFromSlot(Players.LocalPlayer, newSlot)
+            ToolSystem:ChangeTool(item)
+
+            local originOffset = CalculateViewModelOffset()
+            local offsets = ToolSystem:GetToolOffsets(item)
+            originOffset = originOffset * CFrame.new(offsets.Sideways, offsets.Vertical, offsets.Depth)
+
+            ToolSystem:SetOffset(originOffset * CFrame.Angles(-math.rad(90), 0, 0))
+        else
+            ToolSystem:Unequip()
         end
-
-        local item = InventorySystem:GetItemFromSlot(Players.LocalPlayer, newSlot)
-        ToolSystem:ChangeTool(item)
-
-        local originOffset = CalculateViewModelOffset()
-        local offsets = ToolSystem:GetToolOffsets(item)
-        originOffset = originOffset * CFrame.new(offsets.Sideways, offsets.Vertical, offsets.Depth)
-
-        ToolSystem:SetOffset(originOffset * CFrame.Angles(-math.rad(90), 0, 0))
-    else
-        ToolSystem:Unequip()
     end
-end)
+
+    Player:GetAttributeChangedSignal("EquippedSlot"):Connect(function()
+        equipActiveSlotAttribute()
+    end)
+    equipActiveSlotAttribute()
+end
 
 -- Handle gun shooting
 -- do
@@ -123,7 +130,7 @@ do
 
         -- Gun shooting
         if InputSystem:IsStateActive("Fire") and ToolSystem:IsReadyToFire() and ToolSystem:GetWeaponType() == "Gun" and not PlayerStateController:CharacterIsNearWall() then
-            ToolSystem:Fire(CalculateViewModelOffset(), InputSystem:IsStateActive("Aim") == false, elapse)
+            ToolSystem:Fire(CalculateViewModelOffset(), elapse)
         end
 
         local offsets = ToolSystem:GetToolOffsets(InventorySystem:GetItemFromSlot(Players.LocalPlayer, InventorySystem:GetEquippedItemSlot(Players.LocalPlayer)))

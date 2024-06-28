@@ -63,6 +63,11 @@ do
         InventorySystem:AddItem(player, 9, ItemData.new("Wood", 500))
         local crate = workspace.TestCrate
         InventorySystem:InitializeInventory(InventoryData.new(crate, 10))
+
+        task.spawn(function()
+            player.CharacterAdded:Wait()
+            InventorySystem:EquipItem(player, 2)
+        end)
     end
 
     for _, player in Players:GetPlayers() do 

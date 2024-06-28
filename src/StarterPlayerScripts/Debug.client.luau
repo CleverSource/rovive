@@ -41,6 +41,7 @@ Iris:Connect(function()
     Iris.Window({"Rovive Debug"}, {size = windowSize, isOpened = isWindowOpen})
         Iris.Text({`Most Important State: {InputSystem:GetImportantState()}`})
         Iris.Text({`Shoot Tick: {ToolSystem.LastFireTick}`})
+        Iris.Text({`Hip Fire: {InputSystem:IsStateActive("Aim") == false}`})
         Iris.Text({`Equipped Item Slot: {InventorySystem:GetEquippedItemSlot(Players.LocalPlayer)}`})
         
         local input = Iris.InputText({"Inventory Slot"})

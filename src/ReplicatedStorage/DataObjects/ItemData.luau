@@ -7,11 +7,11 @@ export type ItemData = {
     Stack: number,
 }
 
-function ItemData.new(name: string, stack: number)
+function ItemData.new(name: string, stack: number?)
     local item = setmetatable({}, ItemData)
 
     item.Name = name
-    item.Stack = stack
+    item.Stack = stack or 1
 
     return item
 end

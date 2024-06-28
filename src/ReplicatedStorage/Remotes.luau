@@ -8,5 +8,6 @@ return Net.CreateDefinitions({
     StateChanged = Net.Definitions.ServerToClientEvent(),
 
     -- Inventory
+    EquipItem = Net.Definitions.ClientToServerEvent(),
     -- MoveItem = Net.Definitions.ServerAsyncFunction()
 })

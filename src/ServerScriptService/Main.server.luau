@@ -14,6 +14,7 @@ local InventorySystem = require(ReplicatedStorage.Systems.InventorySystem)
 local Remotes = require(ReplicatedStorage.Remotes).Server
 local GetStateRemote = Remotes:Get("GetState")
 local StateChangedRemote = Remotes:Get("StateChanged")
+local EquipItemRemote = Remotes:Get("EquipItem")
 
 -- Debug
 local print = require(ReplicatedStorage.Debug.Print)
@@ -27,8 +28,16 @@ do
     end)
 
     Store.OnStateChanged:Connect(function(newState)
-        print("New state: ", newState)
+        -- print("New state: ", newState)
         StateChangedRemote:SendToAllPlayers(newState)
+    end)
+end
+
+-- Remotes
+do
+    EquipItemRemote:Connect(function(player, slot)
+        InventorySystem:EquipItem(player, tonumber(slot))
+        print(InventorySystem:GetItemFromSlot(player, InventorySystem:GetEquippedItemSlot(player)))
     end)
 end
 
@@ -41,6 +50,11 @@ do
 
         -- Testing
         InventorySystem:AddItem(player, 1, ItemData.new("Wood", 500))
+        InventorySystem:AddItem(player, 2, ItemData.new("Double Barrel"))
+        InventorySystem:AddItem(player, 7, ItemData.new("Double Barrel"))
+        InventorySystem:AddItem(player, 9, ItemData.new("Wood", 500))
+        local crate = workspace.TestCrate
+        InventorySystem:InitializeInventory(InventoryData.new(crate, 10))
     end
 
     for _, player in Players:GetPlayers() do 

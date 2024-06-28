@@ -6,6 +6,10 @@ local UserInputService = game:GetService("UserInputService")
 -- Systems
 local InventorySystem = require(ReplicatedStorage.Systems.InventorySystem)
 
+-- Remotes
+local Remotes = require(ReplicatedStorage.Remotes).Client
+local EquipItemRemote = Remotes:Get("EquipItem")
+
 -- Iris
 local Iris = require(ReplicatedStorage.Packages.Iris).Init()
 
@@ -19,16 +23,44 @@ UserInputService.InputBegan:Connect(function(input)
     end
 end)
 
+local function count(tbl: table)
+    local i = 0
+    for _, _ in pairs(tbl) do
+        i += 1
+    end
+    return i
+end
+
 Iris:Connect(function()
     local playerInventory: InventorySystem.InternalInventoryData = InventorySystem:GetInventoryFromObject(Players.LocalPlayer)
+    local testCrateInventory: InventorySystem.InternalInventoryData = InventorySystem:GetInventoryFromObject(workspace:WaitForChild("TestCrate"))
 
     Iris.Window({"Rovive Debug"}, {size = windowSize, isOpened = isWindowOpen})
         Iris.Text({"The current time is: " .. time()})
+        Iris.Text({`Equipped Item Slot: {InventorySystem:GetEquippedItemSlot(Players.LocalPlayer)}`})
+        
+        local input = Iris.InputText({"Inventory Slot"})
+        if Iris.Button({"Equip Item"}).clicked() then
+            InventorySystem:EquipItem(Players.LocalPlayer, tonumber(input.state.text.value))
+            EquipItemRemote:SendToServer(input.state.text.value)
+        end
+
+        if testCrateInventory ~= nil then
+            Iris.Tree({"Test Crate Data"})
+                for i = 1, testCrateInventory.Data.InventorySlots do
+                    if count(testCrateInventory.RawData[i]) == 0 then
+                        Iris.Text({`Slot {i}: Empty`})
+                    else
+                        Iris.Text({`Slot {i}: {testCrateInventory.RawData[i].Name} x{testCrateInventory.RawData[i].Stack}`})
+                    end
+                end
+            Iris.End()
+        end
 
         if playerInventory ~= nil then
             Iris.Tree({"Local Inventory Data"})
                 for i = 1, playerInventory.Data.InventorySlots do
-                    if playerInventory.RawData[i] == nil then
+                    if count(playerInventory.RawData[i]) == 0 then
                         Iris.Text({`Slot {i}: Empty`})
                     else
                         Iris.Text({`Slot {i}: {playerInventory.RawData[i].Name} x{playerInventory.RawData[i].Stack}`})

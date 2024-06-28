@@ -9,6 +9,7 @@ local ItemData = {
         WeaponType = "Gun", -- Bow, Gun, Melee,
         BulletPattern = "Spread", -- Single, Spread
         BulletSpread = 0.03, -- If spread, how much spread outwards (radius)
+        BulletSpreadCount = 6, -- Amount of actual projectiles that come from spread
         BulletSpeed = 80, -- Measured in meters/sec
         FireRate = 0.4 -- Rate of fire in seconds
     }

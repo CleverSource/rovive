@@ -130,7 +130,7 @@ do
 
         -- Gun shooting
         if InputSystem:IsStateActive("Fire") and ToolSystem:IsReadyToFire() and ToolSystem:GetWeaponType() == "Gun" and not PlayerStateController:CharacterIsNearWall() then
-            ToolSystem:Fire(CalculateViewModelOffset(), elapse)
+            ToolSystem:Fire()
         end
 
         local offsets = ToolSystem:GetToolOffsets(InventorySystem:GetItemFromSlot(Players.LocalPlayer, InventorySystem:GetEquippedItemSlot(Players.LocalPlayer)))
@@ -146,7 +146,6 @@ do
         else
             originOffset = originOffset * CFrame.new(offsets.Sideways, offsets.Vertical, offsets.Depth)
         end
-
 
         ToolSystem:SetOffset(originOffset)
         ToolSystem.SpringX:Update()

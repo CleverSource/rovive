@@ -9,6 +9,7 @@ local ItemData = require(ReplicatedStorage.DataObjects.ItemData)
 
 -- Systems
 local InventorySystem = require(ReplicatedStorage.Systems.InventorySystem)
+local CombatSystem = require(ReplicatedStorage.Systems.CombatSystem)
 
 -- Remotes
 local Remotes = require(ReplicatedStorage.Remotes).Server
@@ -16,6 +17,7 @@ local GetStateRemote = Remotes:Get("GetState")
 local StateChangedRemote = Remotes:Get("StateChanged")
 local EquipItemRemote = Remotes:Get("EquipItem")
 local UnequipItemRemote = Remotes:Get("UnequipItem")
+local HandleHitRemote = Remotes:Get("HandleHit")
 
 -- Debug
 local print = require(ReplicatedStorage.Debug.Print)
@@ -36,6 +38,9 @@ end
 
 -- Remotes
 do
+    local MAX_RAYCAST_ANGLE_TOLERANCE = 0.1
+    local MAX_RAYCAST_DISTANCE_TOLERANCE = 20
+
     EquipItemRemote:Connect(function(player, slot)
         if slot == 0 or slot == nil then
             InventorySystem:UnequipItem(player)
@@ -46,6 +51,28 @@ do
 
     UnequipItemRemote:Connect(function(player)
         InventorySystem:UnequipItem(player)
+    end)
+
+    HandleHitRemote:Connect(function(player: Player, weapon, origin, elapse, claimedPosition)
+        if player.Character and claimedPosition then
+            local humanoid = player.Character:FindFirstChild("Humanoid")
+            local humanoidRootPart = player.Character:FindFirstChild("HumanoidRootPart")
+            if humanoid and humanoidRootPart then
+                if humanoid.Health > 0 then
+                    local expectedRaycast = CombatSystem:FindHitLocation(player, weapon, origin, elapse)
+                    local claimedDirection = (claimedPosition - origin.Position).Unit
+                    local dotProduct = claimedDirection:Dot(expectedRaycast.Position)
+                    local cosAngle = math.clamp(dotProduct, -1, 1)
+                    local angle = math.acos(cosAngle)
+                    local tolerance = math.deg(angle)
+                    if tolerance < MAX_RAYCAST_ANGLE_TOLERANCE and (claimedPosition - expectedRaycast.Position).Magnitude <= MAX_RAYCAST_DISTANCE_TOLERANCE then
+                        -- Handle
+                        print("Legit hit")
+                    end
+                end
+            end
+        end
+        
     end)
 end
 

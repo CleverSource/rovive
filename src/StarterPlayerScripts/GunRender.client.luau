@@ -1,3 +1,4 @@
+-- alex
 -- Services
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -39,8 +40,12 @@ local function CalculateViewModelOffset()
             cframe = cframe * CFrame.new(math.sin(currentTick * currentAnimationSpeed) / 14, math.sin(currentTick * (currentAnimationSpeed * 2)) / 10, 0)
         elseif currentImportantState == "Aim" then
             cframe = cframe * CFrame.new(math.sin(currentTick * (currentAnimationSpeed / 2)) / 60, math.sin(currentTick * (currentAnimationSpeed / 2)) / 80, 0)
-        -- elseif currentImportantState == "Sprint" then
-
+        elseif currentImportantState == "Sprint" then
+            if ToolSystem:GetWeaponType() == "Gun" then
+                -- TODO: make this check weapon hold type? (e.g. pistol, rifle, melee, etc)
+                cframe = cframe * CFrame.new(0, -0.75, 0) * CFrame.new(math.sin(currentTick * currentAnimationSpeed) / 40, math.sin(currentTick * (currentAnimationSpeed * 2)) / 5, math.sin(currentTick * currentAnimationSpeed) / 40)
+                        * CFrame.Angles(0, math.rad(math.sin(currentTick * currentAnimationSpeed) * 8), 0)
+            end
         end
     else
         if currentImportantState == nil or currentImportantState == "Sprint" then
@@ -89,6 +94,18 @@ Player:GetAttributeChangedSignal("EquippedSlot"):Connect(function()
     end
 end)
 
+-- Handle gun shooting
+-- do
+--     InputSystem.OnStateChanged:Connect(function(state, value)
+--         if state == "Fire" then
+--             if ToolSystem:IsReadyToFire() and ToolSystem:GetWeaponType() == "Gun" and not PlayerStateController:CharacterIsNearWall() then
+--                 ToolSystem:Fire(CalculateViewModelOffset(), )
+--             end
+--         end
+--     end)
+-- end
+
+-- Handle gun animations
 do
     local lastLerpTime = tick()
 
@@ -103,6 +120,11 @@ do
         local originOffset = CalculateViewModelOffset()
 
         ToolSystem:UpdateOrigin(elapse)
+
+        -- Gun shooting
+        if InputSystem:IsStateActive("Fire") and ToolSystem:IsReadyToFire() and ToolSystem:GetWeaponType() == "Gun" and not PlayerStateController:CharacterIsNearWall() then
+            ToolSystem:Fire(CalculateViewModelOffset(), InputSystem:IsStateActive("Aim") == false, elapse)
+        end
 
         local offsets = ToolSystem:GetToolOffsets(InventorySystem:GetItemFromSlot(Players.LocalPlayer, InventorySystem:GetEquippedItemSlot(Players.LocalPlayer)))
         

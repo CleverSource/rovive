@@ -5,10 +5,14 @@ local UserInputService = game:GetService("UserInputService")
 -- Game Data
 local GameDefaultKeybinds = require(ReplicatedStorage.GameDefaultKeybinds)
 
+local _onStateChanged = Instance.new("BindableEvent")
 local InputSystem = {
     Keybinds = {},
-    States = {}
+    States = {},
+    OnStateChanged = _onStateChanged.Event
 }
+
+-- TODO: input system will need a rework soon.. likely
 
 local ImportantStateOrder = {
     "Aim",
@@ -16,7 +20,9 @@ local ImportantStateOrder = {
 }
 
 local NonImportantStates = {
-    ["Crouch"] = true
+    ["Crouch"] = true,
+    ["Reload"] = true,
+    ["Fire"] = true,
 }
 
 function InputSystem:MapKeybinds()
@@ -34,6 +40,7 @@ function InputSystem:MapKeybinds()
             local keybind = self.Keybinds[input.KeyCode] or self.Keybinds[input.UserInputType]
             if keybind then
                 self.States[keybind] = true
+                _onStateChanged:Fire(keybind, true)
             end
         end
     end)
@@ -43,6 +50,7 @@ function InputSystem:MapKeybinds()
             local keybind = self.Keybinds[input.KeyCode] or self.Keybinds[input.UserInputType]
             if keybind then
                 self.States[keybind] = false
+                _onStateChanged:Fire(keybind, false)
             end
         end
     end)

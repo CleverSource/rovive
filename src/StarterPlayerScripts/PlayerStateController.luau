@@ -1,3 +1,6 @@
+local Workspace = game:GetService("Workspace")
+local CurrentCamera = Workspace.CurrentCamera
+
 local PlayerStateController = {
     IsAlive = false,
     Character = nil,
@@ -32,6 +35,17 @@ function PlayerStateController:AddCharacter(character: Instance)
     humanoid.StateChanged:Connect(function(_, new)
         self.HumanoidState = new
     end)
+end
+
+function PlayerStateController:CharacterIsNearWall()
+    -- TODO
+    local raycastParams = RaycastParams.new()
+    raycastParams.IgnoreWater = true
+    raycastParams.FilterType = Enum.RaycastFilterType.Include
+    table.insert(raycastParams.FilterDescendantsInstances, Workspace.PlayerBuildings)
+
+    local ray = Workspace:Raycast(CurrentCamera.CFrame.Position, CurrentCamera.CFrame.LookVector * 5, raycastParams)
+    return ray
 end
 
 return PlayerStateController

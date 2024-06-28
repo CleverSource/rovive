@@ -5,6 +5,8 @@ local UserInputService = game:GetService("UserInputService")
 
 -- Systems
 local InventorySystem = require(ReplicatedStorage.Systems.InventorySystem)
+local InputSystem = require(script.Parent.Systems.InputSystem)
+local ToolSystem = require(script.Parent.Systems.ToolSystem)
 
 -- Remotes
 local Remotes = require(ReplicatedStorage.Remotes).Client
@@ -37,7 +39,8 @@ Iris:Connect(function()
     local testCrateInventory: InventorySystem.InternalInventoryData = InventorySystem:GetInventoryFromObject(workspace:WaitForChild("TestCrate"))
 
     Iris.Window({"Rovive Debug"}, {size = windowSize, isOpened = isWindowOpen})
-        Iris.Text({"The current time is: " .. time()})
+        Iris.Text({`Most Important State: {InputSystem:GetImportantState()}`})
+        Iris.Text({`Shoot Tick: {ToolSystem.LastFireTick}`})
         Iris.Text({`Equipped Item Slot: {InventorySystem:GetEquippedItemSlot(Players.LocalPlayer)}`})
         
         local input = Iris.InputText({"Inventory Slot"})

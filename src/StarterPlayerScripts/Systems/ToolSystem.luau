@@ -15,6 +15,12 @@ local Spring = require(ReplicatedStorage.Modules.Spring)
 local Assets = ReplicatedStorage.Assets
 local Tools = Assets.Tools
 
+-- Player State
+local PlayerStateController = require(script.Parent.Parent.PlayerStateController)
+
+-- Systems
+local InputSystem = require(script.Parent.InputSystem)
+
 -- Constants
 local VIEWMODEL_TEXTURE_ID = "rbxassetid://18239537672"
 
@@ -33,12 +39,22 @@ local ToolSystem = {
     SidewaysOffset = nil, -- Aiming sideways offset
     VerticalOffset = nil, -- Aiming vertical offset
     SpringX = Spring.new(0, 0, 4),
-    SpringY = Spring.new(0, 0, 4)
+    SpringY = Spring.new(0, 0, 4),
+    LastFireTick = 0 -- Last time weapon was fired
 }
 
-function ToolSystem:GetWeaponType(): () -> GameItemData.WeaponType
+function ToolSystem:GetStaticData()
     if self.CurrentItem then
-        return GameItemData[self.CurrentItem.Name].WeaponType
+        return GameItemData[self.CurrentItem.Name]
+    else
+        return nil
+    end
+end
+
+function ToolSystem:GetWeaponType(): () -> GameItemData.WeaponType
+    local staticData = self:GetStaticData()
+    if staticData then
+        return staticData.WeaponType
     end
 end
 
@@ -129,6 +145,7 @@ function ToolSystem:UpdateOffset(elapse: number)
     local offset = self.Offset
 
     if not offset then
+        -- Is it even possible to not have an offset?
         return CFrame.new()
     else
         local lerp = 0.2
@@ -139,7 +156,7 @@ function ToolSystem:UpdateOffset(elapse: number)
             lerp = 1
         end
 
-        local cframe = self.Offset:lerp(offset, lerp)
+        local cframe: CFrame = self.Offset:Lerp(offset, lerp)
         self.Offset = cframe
         return cframe
     end
@@ -177,6 +194,20 @@ function ToolSystem:GetToolOffsets(item: ItemData.ItemData)
         Sideways = tool:GetAttribute("Sideways") or 0,
         Vertical = tool:GetAttribute("Vertical") or 0
     }
+end
+
+function ToolSystem:IsReadyToFire()
+    if not self.CurrentItem then return false end
+    local staticData = self:GetStaticData()
+    return InputSystem:IsStateActive("Fire") == true and tick() - self.LastFireTick > staticData.FireRate
+end
+
+function ToolSystem:Fire(originOffset, hipFire, elapse)
+    if PlayerStateController.IsAlive == false then return end
+    self.LastFireTick = tick()
+    InputSystem:ForceStopAction("Fire")
+
+    print("Shoot gun")
 end
 
 return ToolSystem

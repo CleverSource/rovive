@@ -6,7 +6,8 @@ local ItemData = {
 
     ["Double Barrel"] = {
         Equipable = true,
-        WeaponType = "Gun" -- Bow, Gun, Melee
+        WeaponType = "Gun", -- Bow, Gun, Melee,
+        FireRate = 0.4
     }
 }
 

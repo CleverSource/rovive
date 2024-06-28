@@ -28,7 +28,7 @@ Player.CharacterAdded:Wait()
 InputSystem:MapKeybinds()
 
 -- TODO: SUPER DEBUG TEST
--- NOTE: DOWNLOAD DOUBLE BARREL SKINS
+-- TODO: DOWNLOAD DOUBLE BARREL SKINS
 UserInputService.InputBegan:Connect(function(input)
     if input.KeyCode == Enum.KeyCode.R then
         ToolSystem:StopAnimation("Idle", 1)

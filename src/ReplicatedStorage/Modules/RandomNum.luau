@@ -1,4 +1,4 @@
-local RandomNumberGenerator = Random.new()
+local RandomNumberGenerator = Random.new(math.pi * os.clock())
 return function(min, max)
-    return RandomNumberGenerator:NextNumber(min, max)
+    return RandomNumberGenerator:NextInteger(min, max)
 end

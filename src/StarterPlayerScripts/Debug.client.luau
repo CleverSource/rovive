@@ -43,6 +43,13 @@ Iris:Connect(function()
         Iris.Text({`Shoot Tick: {ToolSystem.LastFireTick}`})
         Iris.Text({`Hip Fire: {InputSystem:IsStateActive("Aim") == false}`})
         Iris.Text({`Equipped Item Slot: {InventorySystem:GetEquippedItemSlot(Players.LocalPlayer)}`})
+        local debugWorkspace = workspace:FindFirstChild("Debug")
+        if debugWorkspace then
+            local dummy = debugWorkspace:FindFirstChild("Dummy")
+            if dummy then
+                Iris.Text({`Dummy Health: {dummy.Dummy.Humanoid.Health}`})
+            end
+        end
         
         local input = Iris.InputText({"Inventory Slot"})
         if Iris.Button({"Equip Item"}).clicked() then

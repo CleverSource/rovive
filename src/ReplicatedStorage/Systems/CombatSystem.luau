@@ -33,6 +33,7 @@ function CombatSystem:FindHitLocation(player, weapon, origin, elapse)
 
     local xChange = MetersToStuds(bulletSpeed * elapse)
     local yChange = MetersToStuds(VerticalPositionAtTime(bulletSpeed, shootingAngle, elapse))
+    print(yChange)
 
     local raycastedPoint: CFrame = (origin * CFrame.new(0, yChange, 0)) + ((origin.LookVector + spread) * xChange)
     local rayStart = origin.Position
@@ -47,10 +48,6 @@ function CombatSystem:FindHitLocation(player, weapon, origin, elapse)
     local ray: RaycastResult = Workspace:Raycast(rayStart, rayDirection, raycastParams)
 
     return ray, raycastedPoint
-end
-
-function CombatSystem:HandleHitOnPlayer()
-    
 end
 
 return CombatSystem

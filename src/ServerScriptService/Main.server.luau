@@ -7,6 +7,9 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local InventoryData = require(ReplicatedStorage.DataObjects.InventoryData)
 local ItemData = require(ReplicatedStorage.DataObjects.ItemData)
 
+-- Modules
+local GetStaticData = require(ReplicatedStorage.Modules.GetStaticData)
+
 -- Systems
 local InventorySystem = require(ReplicatedStorage.Systems.InventorySystem)
 local CombatSystem = require(ReplicatedStorage.Systems.CombatSystem)
@@ -39,7 +42,7 @@ end
 -- Remotes
 do
     local MAX_RAYCAST_ANGLE_TOLERANCE = 0.1
-    local MAX_RAYCAST_DISTANCE_TOLERANCE = 20
+    local MAX_RAYCAST_DISTANCE_TOLERANCE = 15
 
     EquipItemRemote:Connect(function(player, slot)
         if slot == 0 or slot == nil then
@@ -53,26 +56,37 @@ do
         InventorySystem:UnequipItem(player)
     end)
 
-    HandleHitRemote:Connect(function(player: Player, weapon, origin, elapse, claimedPosition)
+    HandleHitRemote:Connect(function(player: Player, origin, elapse, claimedPosition)
         if player.Character and claimedPosition then
             local humanoid = player.Character:FindFirstChild("Humanoid")
             local humanoidRootPart = player.Character:FindFirstChild("HumanoidRootPart")
-            if humanoid and humanoidRootPart then
-                if humanoid.Health > 0 then
-                    local expectedRaycast = CombatSystem:FindHitLocation(player, weapon, origin, elapse)
-                    local claimedDirection = (claimedPosition - origin.Position).Unit
-                    local dotProduct = claimedDirection:Dot(expectedRaycast.Position)
-                    local cosAngle = math.clamp(dotProduct, -1, 1)
-                    local angle = math.acos(cosAngle)
-                    local tolerance = math.deg(angle)
-                    if tolerance < MAX_RAYCAST_ANGLE_TOLERANCE and (claimedPosition - expectedRaycast.Position).Magnitude <= MAX_RAYCAST_DISTANCE_TOLERANCE then
-                        -- Handle
-                        print("Legit hit")
-                    end
+
+            if not humanoid and not humanoidRootPart then return end
+            if humanoid.Health <= 0 then return end
+
+            local activeWeapon = InventorySystem:GetItemFromSlot(player, InventorySystem:GetEquippedItemSlot(player))
+            local expectedRaycast = CombatSystem:FindHitLocation(player, activeWeapon, origin, elapse)
+            if not expectedRaycast then return end
+
+            local claimedDirection = (claimedPosition - origin.Position).Unit
+            local dotProduct = claimedDirection:Dot(expectedRaycast.Position)
+            local cosAngle = math.clamp(dotProduct, -1, 1)
+            local angle = math.acos(cosAngle)
+            local tolerance = math.deg(angle)
+
+            local weaponData = GetStaticData(activeWeapon.Name)
+            
+            -- Handle hit
+            if tolerance < MAX_RAYCAST_ANGLE_TOLERANCE and (claimedPosition - expectedRaycast.Position).Magnitude < MAX_RAYCAST_DISTANCE_TOLERANCE then
+                local hit = expectedRaycast.Instance
+                local hitHumanoid: Humanoid = hit.Parent:FindFirstChild("Humanoid")
+                if hitHumanoid then
+                    hitHumanoid:TakeDamage(weaponData.PlayerDamage)
                 end
+            else
+                warn(`Bad tolerance: {tolerance} | {(claimedPosition - expectedRaycast.Position).Magnitude}`)
             end
         end
-        
     end)
 end
 

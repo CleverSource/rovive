@@ -43,7 +43,7 @@ function BulletSystem:ProjectileShoot(player: Player, weapon: ItemData.ItemData,
             local firstTick = tick()
             local lastPoint = currentPoint
 
-            lastPoint = workspace.HackerPart.CFrame
+            -- lastPoint = workspace.Dummy.Dummy.Head.CFrame
 
             while tick() - firstTick < maxFlightTime do
                 RunService.RenderStepped:Wait()
@@ -54,10 +54,10 @@ function BulletSystem:ProjectileShoot(player: Player, weapon: ItemData.ItemData,
                 if hitDetect and hitDetect.Instance then
                     local hitPosition = hitDetect.Position
                     if player == Players.LocalPlayer then
-                        HandleHitRemote:SendToServer(weapon, lastPoint, elapse, hitPosition)
+                        HandleHitRemote:SendToServer(lastPoint, elapse, hitPosition)
                     end
                 end
-                
+
                 bulletTrail.CFrame = GetEndOfCFrameSegment(lastPoint, raycastedPoint)
                 lastPoint = raycastedPoint
             end

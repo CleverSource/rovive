@@ -15,6 +15,7 @@ local Remotes = require(ReplicatedStorage.Remotes).Server
 local GetStateRemote = Remotes:Get("GetState")
 local StateChangedRemote = Remotes:Get("StateChanged")
 local EquipItemRemote = Remotes:Get("EquipItem")
+local UnequipItemRemote = Remotes:Get("UnequipItem")
 
 -- Debug
 local print = require(ReplicatedStorage.Debug.Print)
@@ -36,8 +37,15 @@ end
 -- Remotes
 do
     EquipItemRemote:Connect(function(player, slot)
+        if slot == 0 or slot == nil then
+            InventorySystem:UnequipItem(player)
+        end
         InventorySystem:EquipItem(player, tonumber(slot))
         print(InventorySystem:GetItemFromSlot(player, InventorySystem:GetEquippedItemSlot(player)))
+    end)
+
+    UnequipItemRemote:Connect(function(player)
+        InventorySystem:UnequipItem(player)
     end)
 end
 

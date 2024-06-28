@@ -15,17 +15,32 @@ local Spring = require(ReplicatedStorage.Modules.Spring)
 local Assets = ReplicatedStorage.Assets
 local Tools = Assets.Tools
 
+-- Constants
+local VIEWMODEL_TEXTURE_ID = "rbxassetid://18239537672"
+
+-- Game Data
+local GameItemData = require(ReplicatedStorage.GameItemData)
+
 -- Data Objects
 local ItemData = require(ReplicatedStorage.DataObjects.ItemData)
 
 local ToolSystem = {
-    Origin = nil,
-    Offset = nil,
-    ViewModel = nil,
+    Origin = nil, -- View model humanoid root part (origin)
+    Offset = nil, -- View model offset
+    ViewModel = nil, -- View model ref
     CurrentTool = nil,
+    CurrentItem = nil,
+    SidewaysOffset = nil, -- Aiming sideways offset
+    VerticalOffset = nil, -- Aiming vertical offset
     SpringX = Spring.new(0, 0, 4),
     SpringY = Spring.new(0, 0, 4)
 }
+
+function ToolSystem:GetWeaponType(): () -> GameItemData.WeaponType
+    if self.CurrentItem then
+        return GameItemData[self.CurrentItem.Name].WeaponType
+    end
+end
 
 function ToolSystem:ClearViewModel()
     for _, child in Camera:GetChildren() do
@@ -55,6 +70,11 @@ function ToolSystem:PlayAnimation(animationName: string, yield: boolean?)
     track.Name = animationName
     track:AdjustSpeed(1)
 
+    if track.Name == "Idle" then
+        self.SidewaysOffset = self.CurrentTool.ScreenCenter.CFrame.X - self.Origin.CFrame.X
+        self.VerticalOffset = self.CurrentTool.ScreenCenter.CFrame.Y - self.Origin.CFrame.Y
+    end
+
     if yield then
         local waiting = true 
         track.Stopped:Connect(function()
@@ -69,10 +89,9 @@ end
 function ToolSystem:SetupToolForEquip(item: ItemData.ItemData)
     local viewModel = ViewModelAsset:Clone()
     viewModel.Parent = Camera
-    self.ViewModel = viewModel
 
-    viewModel.LeftArm.TextureID = "rbxassetid://3455123465" -- TODO: upload own version of this texture
-    viewModel.RightArm.TextureID = "rbxassetid://3455123465"
+    viewModel.LeftArm.TextureID = VIEWMODEL_TEXTURE_ID
+    viewModel.RightArm.TextureID = VIEWMODEL_TEXTURE_ID
     viewModel.LeftArm.BrickColor = Player.Character.Head.BrickColor
     viewModel.RightArm.BrickColor = Player.Character.Head.BrickColor
 
@@ -80,9 +99,21 @@ function ToolSystem:SetupToolForEquip(item: ItemData.ItemData)
     tool.Parent = viewModel
     tool.RightArmWeld.Part0 = viewModel.RightArm
     tool.RightArmWeld.Part1 = tool.PrimaryPart
+    
+    self.SidewaysOffset = tool.ScreenCenter.CFrame.X - viewModel.HumanoidRootPart.CFrame.X
+    self.VerticalOffset = tool.ScreenCenter.CFrame.Y - viewModel.HumanoidRootPart.CFrame.Y
+    self.ViewModel = viewModel
     self.CurrentTool = tool
-
+    self.CurrentItem = item
     self.Origin = viewModel.HumanoidRootPart
+end
+
+function ToolSystem:Unequip()
+    self:ClearViewModel()
+    self.ViewModel = nil
+    self.CurrentTool = nil
+    self.CurrentItem = nil
+    self.Offset = nil
 end
 
 function ToolSystem:ChangeTool(item: ItemData.ItemData)
@@ -92,7 +123,7 @@ function ToolSystem:ChangeTool(item: ItemData.ItemData)
     self:PlayAnimation("Draw")
 end
 
-function ToolSystem:GetOffset(elapse: number)
+function ToolSystem:UpdateOffset(elapse: number)
     local offset = self.Offset
 
     if not offset then
@@ -103,7 +134,7 @@ function ToolSystem:GetOffset(elapse: number)
         local fps = 1 / 60
         lerp = root * (elapse / fps)
         if lerp > 1 then
-            lerp = 1 
+            lerp = 1
         end
 
         local cframe = self.Offset:lerp(offset, lerp)
@@ -119,7 +150,7 @@ end
 function ToolSystem:UpdateOrigin(elapse: number)
     if not self.Origin then return end
     self.Origin.CFrame = Camera.CFrame
-                        * self:GetOffset(elapse)
+                        * self:UpdateOffset(elapse)
                         * CFrame.Angles(0, math.rad(180), 0)
 end
 

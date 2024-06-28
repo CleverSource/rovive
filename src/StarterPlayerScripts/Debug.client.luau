@@ -9,13 +9,14 @@ local InventorySystem = require(ReplicatedStorage.Systems.InventorySystem)
 -- Remotes
 local Remotes = require(ReplicatedStorage.Remotes).Client
 local EquipItemRemote = Remotes:Get("EquipItem")
+local UnequipItemRemote = Remotes:Get("UnequipItem")
 
 -- Iris
 local Iris = require(ReplicatedStorage.Packages.Iris).Init()
 
 local windowSize = Iris.State(Vector2.new(300, 400))
 local isWindowOpen = Iris.State(false)
-local openKeybind = Enum.KeyCode.Q
+local openKeybind = Enum.KeyCode.Zero
 
 UserInputService.InputBegan:Connect(function(input)
     if input.KeyCode == openKeybind then
@@ -41,8 +42,22 @@ Iris:Connect(function()
         
         local input = Iris.InputText({"Inventory Slot"})
         if Iris.Button({"Equip Item"}).clicked() then
+            print('abc')
             InventorySystem:EquipItem(Players.LocalPlayer, tonumber(input.state.text.value))
             EquipItemRemote:SendToServer(input.state.text.value)
+        end
+
+        if Iris.Button({"Unequip Item"}).clicked() then
+            InventorySystem:UnequipItem(Players.LocalPlayer)
+            UnequipItemRemote:SendToServer()
+        end
+
+        if Iris.Button({"Screen Center Debug"}).clicked() then
+            for _,v in pairs(workspace.CurrentCamera:GetDescendants()) do
+                if v.Name == "ScreenCenter" then
+                    v.Transparency = v.Transparency == 1 and 0 or 1
+                end
+            end
         end
 
         if testCrateInventory ~= nil then

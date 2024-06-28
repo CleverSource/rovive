@@ -5,9 +5,12 @@ local ItemData = {
     },
 
     ["Double Barrel"] = {
-        Equipable = true
+        Equipable = true,
+        WeaponType = "Gun" -- Bow, Gun, Melee
     }
 }
+
+export type WeaponType = "Bow" | "Gun" | "Melee"
 
 for itemName, itemData in ItemData do
     itemData.Name = itemName

@@ -75,6 +75,12 @@ function InventorySystem:EquipItem(inventoryObject: Instance, slot: number)
     end
 end
 
+function InventorySystem:UnequipItem(inventoryObject: Instance)
+    if inventoryObject:IsA("Player") then
+        inventoryObject:SetAttribute("EquippedSlot", nil)
+    end
+end
+
 function InventorySystem:GetEquippedItemSlot(inventoryObject: Instance)
     if inventoryObject:IsA("Player") then
         return inventoryObject:GetAttribute("EquippedSlot")

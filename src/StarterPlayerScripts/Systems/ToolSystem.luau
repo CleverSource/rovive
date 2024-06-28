@@ -52,9 +52,11 @@ function ToolSystem:ClearViewModel()
 end
 
 function ToolSystem:StopAnimation(animationName: string, fadeTime: number?)
-    for _, track: AnimationTrack in self.ViewModel.Humanoid:GetPlayingAnimationTracks() do
-        if track.Name == animationName then
-            track:Stop(fadeTime or 0.1)
+    if self.ViewModel then
+        for _, track: AnimationTrack in self.ViewModel.Humanoid:GetPlayingAnimationTracks() do
+            if track.Name == animationName then
+                track:Stop(fadeTime or 0.1)
+            end
         end
     end
 end

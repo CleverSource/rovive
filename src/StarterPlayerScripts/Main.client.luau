@@ -7,8 +7,8 @@ local UserInputService = game:GetService("UserInputService")
 local Player = Players.LocalPlayer
 
 -- Systems
-local ToolSystem = require(script.Parent.ToolSystem)
-local InputSystem = require(script.Parent.InputSystem)
+local ToolSystem = require(script.Parent.Systems.ToolSystem)
+local InputSystem = require(script.Parent.Systems.InputSystem)
 
 -- Player State
 local PlayerStateController = require(script.Parent.PlayerStateController)

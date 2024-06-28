@@ -11,9 +11,9 @@ local PlayerStateController = require(script.Parent.PlayerStateController)
 local Player = Players.LocalPlayer
 
 -- Systems
-local ToolSystem = require(script.Parent.ToolSystem)
+local ToolSystem = require(script.Parent.Systems.ToolSystem)
+local InputSystem = require(script.Parent.Systems.InputSystem)
 local InventorySystem = require(ReplicatedStorage.Systems.InventorySystem)
-local InputSystem = require(script.Parent.InputSystem)
 
 -- Functions
 local function CalculateViewModelOffset()

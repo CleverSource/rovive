@@ -55,6 +55,10 @@ function InputSystem:IsStateActive(state)
     return self.States[state]
 end
 
+function InputSystem:ForceStopAction(state)
+    self.States[state] = false
+end
+
 function InputSystem:GetImportantState()
     local mostImportantState = nil
     for state, active in self.States do

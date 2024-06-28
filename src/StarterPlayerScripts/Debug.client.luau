@@ -42,7 +42,6 @@ Iris:Connect(function()
         
         local input = Iris.InputText({"Inventory Slot"})
         if Iris.Button({"Equip Item"}).clicked() then
-            print('abc')
             InventorySystem:EquipItem(Players.LocalPlayer, tonumber(input.state.text.value))
             EquipItemRemote:SendToServer(input.state.text.value)
         end

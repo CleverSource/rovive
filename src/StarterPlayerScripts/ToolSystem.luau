@@ -70,10 +70,10 @@ function ToolSystem:PlayAnimation(animationName: string, yield: boolean?)
     track.Name = animationName
     track:AdjustSpeed(1)
 
-    if track.Name == "Idle" then
-        self.SidewaysOffset = self.CurrentTool.ScreenCenter.CFrame.X - self.Origin.CFrame.X
-        self.VerticalOffset = self.CurrentTool.ScreenCenter.CFrame.Y - self.Origin.CFrame.Y
-    end
+    -- if track.Name == "Idle" then
+    --     self.SidewaysOffset = self.CurrentTool.ScreenCenter.CFrame.X - self.Origin.CFrame.X
+    --     self.VerticalOffset = self.CurrentTool.ScreenCenter.CFrame.Y - self.Origin.CFrame.Y
+    -- end
 
     if yield then
         local waiting = true 

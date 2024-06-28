@@ -24,6 +24,7 @@ end)
 
 Player.CharacterAdded:Wait()
 
+-- Handle player input
 InputSystem:MapKeybinds()
 
 -- TODO: SUPER DEBUG TEST

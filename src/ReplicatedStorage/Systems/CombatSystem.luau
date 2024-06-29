@@ -18,7 +18,7 @@ end
 -- Combat System
 local CombatSystem = {}
 
-function CombatSystem:FindHitLocation(player, weapon, origin, elapse)
+function CombatSystem:CalculateRaycast(weapon, origin, elapse)
     local staticData = GetStaticData(weapon.Name)
     local bulletSpeed = staticData.BulletSpeed or 7
 
@@ -32,14 +32,18 @@ function CombatSystem:FindHitLocation(player, weapon, origin, elapse)
     shootingAngle = shootingAngle < 0 and 0 or shootingAngle
 
     local xChange = MetersToStuds(bulletSpeed * elapse)
-    local yChange = MetersToStuds(VerticalPositionAtTime(bulletSpeed, shootingAngle, elapse))
-    print(yChange)
+    local yChange = VerticalPositionAtTime(bulletSpeed, shootingAngle, elapse)
 
     local raycastedPoint: CFrame = (origin * CFrame.new(0, yChange, 0)) + ((origin.LookVector + spread) * xChange)
     local rayStart = origin.Position
     local rayDistance = (origin.Position - raycastedPoint.Position).Magnitude
     local rayDirection = (raycastedPoint.Position - origin.Position).Unit * rayDistance
+    return rayStart, rayDirection, raycastedPoint
+end
 
+function CombatSystem:FindHitLocation(player, weapon, origin, elapse)
+    local rayStart, rayDirection, raycastedPoint = self:CalculateRaycast(weapon, origin, elapse)
+    
     local raycastParams = RaycastParams.new()
     raycastParams.IgnoreWater = true
     raycastParams.FilterType = Enum.RaycastFilterType.Exclude

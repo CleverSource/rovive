@@ -101,17 +101,6 @@ do
     equipActiveSlotAttribute()
 end
 
--- Handle gun shooting
--- do
---     InputSystem.OnStateChanged:Connect(function(state, value)
---         if state == "Fire" then
---             if ToolSystem:IsReadyToFire() and ToolSystem:GetWeaponType() == "Gun" and not PlayerStateController:CharacterIsNearWall() then
---                 ToolSystem:Fire(CalculateViewModelOffset(), )
---             end
---         end
---     end)
--- end
-
 -- Handle gun animations
 do
     local lastLerpTime = tick()

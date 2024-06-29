@@ -8,6 +8,9 @@ local InventorySystem = require(ReplicatedStorage.Systems.InventorySystem)
 local InputSystem = require(script.Parent.Systems.InputSystem)
 local ToolSystem = require(script.Parent.Systems.ToolSystem)
 
+-- Packages
+local FastCast = require(ReplicatedStorage.Packages.FastCast)
+
 -- Remotes
 local Remotes = require(ReplicatedStorage.Remotes).Client
 local EquipItemRemote = Remotes:Get("EquipItem")
@@ -60,6 +63,14 @@ Iris:Connect(function()
         if Iris.Button({"Unequip Item"}).clicked() then
             InventorySystem:UnequipItem(Players.LocalPlayer)
             UnequipItemRemote:SendToServer()
+        end
+
+        if Iris.Button({`{FastCast.VisualizeCasts == false and "Enable" or "Disable"} Bullet Rays`}).clicked() then
+            local fastCastObjects = workspace.Terrain:FindFirstChild("FastCastVisualizationObjects")
+            if fastCastObjects then
+                fastCastObjects:Destroy()
+            end
+            FastCast.VisualizeCasts = not FastCast.VisualizeCasts
         end
 
         if Iris.Button({"Screen Center Debug"}).clicked() then

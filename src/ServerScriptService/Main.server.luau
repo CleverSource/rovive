@@ -104,11 +104,13 @@ do
         castBehavior.Acceleration = Vector3.new(0, -9.81, 0)
         castBehavior.AutoIgnoreContainer = true
 
-        local cast = ServerCaster:Fire(rayStart, rayDirection, weaponData.BulletSpeed, castBehavior)
-        cast.UserData = {
-            Player = player,
-            Weapon = activeWeapon
-        }
+        for _ = 1, weaponData.BulletSpreadCount or 1 do
+            local cast = ServerCaster:Fire(rayStart, rayDirection, weaponData.BulletSpeed, castBehavior)
+            cast.UserData = {
+                Player = player,
+                Weapon = activeWeapon
+            }
+        end
         
         -- OLD
         -- if player.Character and claimedPosition then

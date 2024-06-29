@@ -16,15 +16,44 @@ local Remotes = require(ReplicatedStorage.Remotes).Client
 local EquipItemRemote = Remotes:Get("EquipItem")
 local UnequipItemRemote = Remotes:Get("UnequipItem")
 
+-- Assets
+local Assets = ReplicatedStorage.Assets
+local DebugHud = Assets.DebugHud
+
+-- Variables
+local PlayerGui = Players.LocalPlayer:WaitForChild("PlayerGui")
+
 -- Iris
 local Iris = require(ReplicatedStorage.Packages.Iris).Init()
 
 local windowSize = Iris.State(Vector2.new(300, 400))
 local isWindowOpen = Iris.State(false)
+local debugHudRef = Iris.State(nil)
 local openKeybind = Enum.KeyCode.Zero
 
+-- TODO: possibly make this available via admin commands
+-- or based on group rank, idk
+local Devs = {
+    ["47248306"] = true, -- CleverSource
+    ["472765608"] = true -- baydocks
+}
+
 UserInputService.InputBegan:Connect(function(input)
-    if input.KeyCode == openKeybind then
+    if input.KeyCode == openKeybind and Devs[tostring(Players.LocalPlayer.UserId)] then
+        if PlayerGui:FindFirstChild(DebugHud.Name) == nil then
+            local debugHudClone = DebugHud:Clone()
+            debugHudClone.Parent = PlayerGui
+            debugHudRef:set(debugHudClone)
+
+            -- Debug Hud
+            task.spawn(function()
+                while task.wait() do
+                    local activeItem = ToolSystem.CurrentItem
+                    local gunNameLabel = debugHudClone.Weapon.NameLabel
+                    gunNameLabel.Text = activeItem and ToolSystem.CurrentItem.Name or "nil"
+                end
+            end)
+        end
         isWindowOpen:set(not isWindowOpen:get())
     end
 end)
@@ -56,13 +85,20 @@ Iris:Connect(function()
         
         local input = Iris.InputText({"Inventory Slot"})
         if Iris.Button({"Equip Item"}).clicked() then
-            InventorySystem:EquipItem(Players.LocalPlayer, tonumber(input.state.text.value))
-            EquipItemRemote:SendToServer(input.state.text.value)
+            if input.state.text.value ~= nil then
+                InventorySystem:EquipItem(Players.LocalPlayer, tonumber(input.state.text.value))
+                EquipItemRemote:SendToServer(input.state.text.value)
+            end
         end
 
         if Iris.Button({"Unequip Item"}).clicked() then
             InventorySystem:UnequipItem(Players.LocalPlayer)
             UnequipItemRemote:SendToServer()
+        end
+
+        if Iris.Button({"Toggle Debug Hud"}).clicked() then
+            local debugHud = debugHudRef:get()
+            debugHud.Enabled = not debugHud.Enabled
         end
 
         if Iris.Button({`{FastCast.VisualizeCasts == false and "Enable" or "Disable"} Bullet Rays`}).clicked() then

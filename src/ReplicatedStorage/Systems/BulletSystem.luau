@@ -55,6 +55,7 @@ ClientCaster.LengthChanged:Connect(OnLengthChanged)
 ClientCaster.RayHit:Connect(OnRayHit)
 
 -- Handle projectile shooting visuals
+-- TODO: part cache for bullets (see CosmeticBulletProvider on FastCast docs)
 function BulletSystem:ProjectileShoot(player: Player, weapon: ItemData.ItemData, bulletOrigin: CFrame)
     local weaponData = GetStaticData(weapon.Name)
     
@@ -82,9 +83,10 @@ function BulletSystem:ProjectileShoot(player: Player, weapon: ItemData.ItemData,
             RunService.RenderStepped:Wait()
 
             -- local hitDetect, raycastedPoint = CombatSystem:FindHitLocation(player, weapon, lastPoint, elapse)
-            HandleHitRemote:SendToServer(bulletOrigin, Vector3.new(0, 0, 0)) -- TODO: maybe use expected pos
         end)
     end
+
+    HandleHitRemote:SendToServer(bulletOrigin, Vector3.new(0, 0, 0)) -- TODO: maybe use expected pos
 end
 
 return BulletSystem

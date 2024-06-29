@@ -61,14 +61,15 @@ function InventorySystem:EquipItem(inventoryObject: Instance, slot: number)
         local storeKey = self:GetDataKey(inventoryObject)
         local inventoryData: _InternalInventoryData = inventory[storeKey]
 
-        if slot > inventoryData.Data.InventorySlots then
+        if slot and slot > inventoryData.Data.InventorySlots then
             warn("InventorySystem: Attempted to equip item from slot that does not exist.")
             return
         end
 
         if inventoryData then
             local item = inventoryData.RawData[slot]
-            if item ~= nil and GameItemData[item.Name].Equipable then
+            -- TODO: more proper way of checking this data is valid
+            if item.Name and GameItemData[item.Name].Equipable then
                 inventoryObject:SetAttribute("EquippedSlot", slot)
             end
         end

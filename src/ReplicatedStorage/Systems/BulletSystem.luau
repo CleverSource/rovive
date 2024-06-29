@@ -16,6 +16,7 @@ local CombatSystem = require(ReplicatedStorage.Systems.CombatSystem)
 
 -- Packages
 local FastCast = require(ReplicatedStorage.Packages.FastCast)
+local PartCache = require(ReplicatedStorage.Packages.PartCache)
 
 -- Modules
 local GetStaticData = require(ReplicatedStorage.Modules.GetStaticData)
@@ -23,14 +24,19 @@ local GetStaticData = require(ReplicatedStorage.Modules.GetStaticData)
 -- Item Data
 local ItemData = require(ReplicatedStorage.DataObjects.ItemData)
 
+-- Game Data
+local GameBulletData = require(ReplicatedStorage.GameBulletData)
+
 -- Remotes
 local Remotes = require(ReplicatedStorage.Remotes).Client
 local HandleHitRemote = Remotes:Get("HandleHit")
 
--- Local Effect Systems
+-- Bullet System
 local BulletSystem = {}
 
 -- Hit detection
+-- TODO: other bullet trail types e.g. rockets
+local BulletCache = PartCache.new(BulletTrail, 100, Workspace.Bullets)
 local ClientCaster = FastCast.new()
 
 -- cast, lastPoint, direction, length, velocity, bullet
@@ -45,48 +51,46 @@ end
 -- cast, result, velocity, bullet
 local function OnRayHit(_, _, _, bullet)
     -- local hit = result.Instance
-    print("Hit on client!")
-    if bullet then
-        bullet:Destroy()
-    end
 end
 
 ClientCaster.LengthChanged:Connect(OnLengthChanged)
 ClientCaster.RayHit:Connect(OnRayHit)
+ClientCaster.CastTerminating:Connect(function(cast)
+    local rayInfo = cast.RayInfo
+    if rayInfo and rayInfo.CosmeticBulletObject then
+        local bullet = rayInfo.CosmeticBulletObject
+        BulletCache:ReturnPart(bullet)
+    end
+end)
 
 -- Handle projectile shooting visuals
--- TODO: part cache for bullets (see CosmeticBulletProvider on FastCast docs)
 function BulletSystem:ProjectileShoot(player: Player, weapon: ItemData.ItemData, bulletOrigin: CFrame)
     local weaponData = GetStaticData(weapon.Name)
-    
+
     for _ = 1, weaponData.BulletSpreadCount or 1 do
         task.spawn(function()
-            local rayStart, rayDirection = CombatSystem:CalculateRaycast(weapon, bulletOrigin, 20)--elapse)
+            local rayStart, rayDirection = CombatSystem:CalculateRaycast(weapon, bulletOrigin, 20)
             
             local raycastParams = RaycastParams.new()
             raycastParams.IgnoreWater = true
             raycastParams.FilterType = Enum.RaycastFilterType.Exclude
-            raycastParams.FilterDescendantsInstances = { workspace.CurrentCamera, player.Character, Workspace.Debris }
+            raycastParams.FilterDescendantsInstances = { workspace.CurrentCamera, player.Character, Workspace.Debris, Workspace.Bullets }
     
             local castBehavior = FastCast.newBehavior()
-            castBehavior.MaxDistance = 500 -- TODO
-            castBehavior.CanPierceFunction = function() -- TODO
-                return false
-            end
+            castBehavior.MaxDistance = weaponData.BulletMaxDistance
+            castBehavior.CanPierceFunction = CombatSystem.CanPierceObject
             castBehavior.RaycastParams = raycastParams
-            castBehavior.Acceleration = Vector3.new(0, -9.81, 0)
+            castBehavior.Acceleration = GameBulletData.BulletAcceleration + (weaponData.BulletAcceleration or Vector3.new(0, 0, 0))
             castBehavior.AutoIgnoreContainer = true
-            castBehavior.CosmeticBulletContainer = Workspace.Debris
-            castBehavior.CosmeticBulletTemplate = BulletTrail
+            castBehavior.CosmeticBulletContainer = Workspace.Bullets
+            castBehavior.CosmeticBulletProvider = BulletCache
     
             ClientCaster:Fire(rayStart, rayDirection, weaponData.BulletSpeed, castBehavior)
             RunService.RenderStepped:Wait()
-
-            -- local hitDetect, raycastedPoint = CombatSystem:FindHitLocation(player, weapon, lastPoint, elapse)
         end)
     end
-
-    HandleHitRemote:SendToServer(bulletOrigin, Vector3.new(0, 0, 0)) -- TODO: maybe use expected pos
+    
+    HandleHitRemote:SendToServer(bulletOrigin)
 end
 
 return BulletSystem

@@ -10,7 +10,7 @@ local ItemData = require(DataObjects.ItemData)
 local GameItemData = require(ReplicatedStorage.GameItemData)
 
 -- Store
-local Store = require(ReplicatedStorage.Store).new()
+local Store = require(ReplicatedStorage:WaitForChild("Store")).new()
 
 -- InventorySystem
 type _InternalInventoryData = {

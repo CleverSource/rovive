@@ -18,9 +18,13 @@ end
 -- Combat System
 local CombatSystem = {}
 
+function CombatSystem:CanPierceObject()
+    return false    
+end
+
 function CombatSystem:CalculateRaycast(weapon, origin, elapse)
     local staticData = GetStaticData(weapon.Name)
-    local bulletSpeed = staticData.BulletSpeed or 7
+    local bulletSpeed = staticData.BulletSpeed or 100
 
     local spread = Vector3.new()
     if staticData.BulletPattern == "Spread" then
@@ -47,7 +51,7 @@ function CombatSystem:FindHitLocation(player, weapon, origin, elapse)
     local raycastParams = RaycastParams.new()
     raycastParams.IgnoreWater = true
     raycastParams.FilterType = Enum.RaycastFilterType.Exclude
-    raycastParams.FilterDescendantsInstances = { CurrentCamera, player.Character, Workspace.Debris }
+    raycastParams.FilterDescendantsInstances = { CurrentCamera, player.Character, Workspace.Debris, Workspace.Bullets }
 
     local ray: RaycastResult = Workspace:Raycast(rayStart, rayDirection, raycastParams)
 

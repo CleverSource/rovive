@@ -38,13 +38,12 @@ function PlayerStateController:AddCharacter(character: Instance)
 end
 
 function PlayerStateController:CharacterIsNearWall()
-    -- TODO
     local raycastParams = RaycastParams.new()
     raycastParams.IgnoreWater = true
     raycastParams.FilterType = Enum.RaycastFilterType.Include
-    table.insert(raycastParams.FilterDescendantsInstances, Workspace.PlayerBuildings)
+    raycastParams.FilterDescendantsInstances = { Workspace.PlayerBuildings }
 
-    local ray = Workspace:Raycast(CurrentCamera.CFrame.Position, CurrentCamera.CFrame.LookVector * 5, raycastParams)
+    local ray = Workspace:Raycast(CurrentCamera.CFrame.Position, CurrentCamera.CFrame.LookVector * 6, raycastParams)
     return ray
 end
 

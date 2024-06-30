@@ -52,6 +52,7 @@ end
 -- cast, result, velocity, bullet
 local function OnRayHit(cast, result: RaycastResult, _, bullet)
     local hit = result.Instance
+    local humanoid = hit.Parent:FindFirstChild("Humanoid") or hit.Parent.Parent:FindFirstChildOfClass("Humanoid")
     local terrainHit: RaycastResult = cast.UserData.TerrainHit
 
     -- Handle water splashes
@@ -61,7 +62,7 @@ local function OnRayHit(cast, result: RaycastResult, _, bullet)
 
     -- Handle bullet holes
     if hit and hit.CanCollide == true then
-        if not hit.Parent:FindFirstChildOfClass("Humanoid") and not hit.Parent.Parent:FindFirstChildOfClass("Humanoid") then
+        if humanoid == nil then
             EffectsSystem:MakeBulletHole()
         end
     end

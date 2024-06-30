@@ -146,6 +146,8 @@ function ToolSystem:SetupToolForEquip(item: ItemData.ItemData)
 end
 
 function ToolSystem:Unequip()
+    InputSystem:ForceStopAction("Fire")
+    InputSystem:ForceStopAction("Reload")
     self:ClearViewModel()
     self.ViewModel = nil
     self.CurrentTool = nil
@@ -154,6 +156,8 @@ function ToolSystem:Unequip()
 end
 
 function ToolSystem:ChangeTool(item: ItemData.ItemData)
+    InputSystem:ForceStopAction("Fire")
+    InputSystem:ForceStopAction("Reload")
     self:ClearViewModel()
     self:SetupToolForEquip(item)
     self:PlayAnimation("Idle")

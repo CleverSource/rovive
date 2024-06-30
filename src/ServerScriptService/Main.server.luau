@@ -194,7 +194,7 @@ do
         InventorySystem:AddItem(crate, 2, ItemData.new("Double Barrel"))
 
         task.spawn(function()
-            player.CharacterAdded:Wait()
+            task.wait(2)
             InventorySystem:EquipItem(player, 2)
         end)
     end

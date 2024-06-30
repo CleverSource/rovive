@@ -52,17 +52,18 @@ UserInputService.InputBegan:Connect(function(input)
             task.spawn(function()
                 while task.wait() do
                     local activeItem = ToolSystem.CurrentItem
-                    if activeItem == nil then return end
-                    local gunNameLabel = debugHudClone.Weapon.NameLabel
-                    local ammoLabel = debugHudClone.Weapon.AmmoLabel
-                    local staticData = GetStaticData(activeItem.Name)
-                    gunNameLabel.Text = activeItem and ToolSystem.CurrentItem.Name or "nil"
+                    if activeItem ~= nil then
+                        local gunNameLabel = debugHudClone.Weapon.NameLabel
+                        local ammoLabel = debugHudClone.Weapon.AmmoLabel
+                        local staticData = GetStaticData(activeItem.Name)
+                        gunNameLabel.Text = activeItem and ToolSystem.CurrentItem.Name or "nil"
 
-                    if staticData and staticData.MaxAmmo then
-                        ammoLabel.Visible = true
-                        ammoLabel.Text = activeItem and `<b>{ToolSystem.CurrentItem.Ammo}</b> / <i>{staticData.MaxAmmo}</i>`
-                    else
-                        ammoLabel.Text = "nil"
+                        if staticData and staticData.MaxAmmo then
+                            ammoLabel.Visible = true
+                            ammoLabel.Text = activeItem and `<b>{ToolSystem.CurrentItem.Ammo}</b> / <i>{staticData.MaxAmmo}</i>`
+                        else
+                            ammoLabel.Text = "nil"
+                        end
                     end
                 end
             end)

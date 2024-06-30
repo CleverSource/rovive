@@ -63,7 +63,7 @@ local function OnRayHit(cast, result: RaycastResult, _, bullet)
     -- Handle bullet holes
     if hit and hit.CanCollide == true then
         if humanoid == nil then
-            EffectsSystem:MakeBulletHole()
+            EffectsSystem:MakeBulletHole(result)
         end
     end
 end

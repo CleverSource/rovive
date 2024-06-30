@@ -117,13 +117,6 @@ do
 
         ToolSystem:UpdateOrigin(elapse)
 
-        -- Gun shooting
-        if InputSystem:IsStateActive("Fire") and ToolSystem:IsReadyToFire() and ToolSystem:GetWeaponType() == "Gun" and not PlayerStateController:CharacterIsNearWall() then
-            ToolSystem:Fire()
-        else
-            InputSystem:ForceStopAction("Fire")
-        end
-
         local itemData = InventorySystem:GetItemData(Players.LocalPlayer, InventorySystem:GetEquippedItemSlot(Players.LocalPlayer))
         local offsets = ToolSystem:GetToolOffsets(itemData.Data)
         

@@ -82,8 +82,8 @@ do
                 return
             end
 
-            local item = InventorySystem:GetItemFromSlot(Players.LocalPlayer, newSlot)
-            ToolSystem:ChangeTool(item)
+            local item = InventorySystem:GetItemData(Players.LocalPlayer, newSlot)
+            ToolSystem:ChangeTool(item.Data)
 
             local originOffset = CalculateViewModelOffset()
             local offsets = ToolSystem:GetToolOffsets(item)
@@ -124,7 +124,8 @@ do
             InputSystem:ForceStopAction("Fire")
         end
 
-        local offsets = ToolSystem:GetToolOffsets(InventorySystem:GetItemFromSlot(Players.LocalPlayer, InventorySystem:GetEquippedItemSlot(Players.LocalPlayer)))
+        local itemData = InventorySystem:GetItemData(Players.LocalPlayer, InventorySystem:GetEquippedItemSlot(Players.LocalPlayer))
+        local offsets = ToolSystem:GetToolOffsets(itemData.Data)
         
         -- Aiming
         if InputSystem:IsStateActive("Aim") then

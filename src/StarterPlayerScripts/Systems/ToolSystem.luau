@@ -25,12 +25,17 @@ local PlayerStateController = require(script.Parent.Parent.PlayerStateController
 -- Systems
 local InputSystem = require(script.Parent.InputSystem)
 local BulletSystem = require(ReplicatedStorage.Systems.BulletSystem)
+local InventorySystem = require(ReplicatedStorage.Systems.InventorySystem)
 
 -- Constants
 local VIEWMODEL_TEXTURE_ID = "rbxassetid://18239537672"
 
 -- Game Data
 local GameItemData = require(ReplicatedStorage.GameItemData)
+
+-- Remotes
+local Remotes = require(ReplicatedStorage.Remotes).Client
+local ReloadRemote = Remotes:Get("Reload")
 
 -- Data Objects
 local ItemData = require(ReplicatedStorage.DataObjects.ItemData)
@@ -216,14 +221,49 @@ function ToolSystem:IsReadyToFire()
     return InputSystem:IsStateActive("Fire") == true and tick() - self.LastFireTick > staticData.FireRate
 end
 
-function ToolSystem:Fire()
-    if PlayerStateController.IsAlive == false or self.CurrentItem == nil then return end
-    self.LastFireTick = tick()
-    InputSystem:ForceStopAction("Fire")
+function ToolSystem:Reload()
+    local staticData = self:GetStaticData()
+    if PlayerStateController.IsAlive == false or self.CurrentItem == nil then 
+        InputSystem:ForceStopAction("Reload")
+        return 
+    end
+    if self.CurrentItem.Ammo >= staticData.MaxAmmo then
+        InputSystem:ForceStopAction("Reload")
+        return
+    end
+    if #InventorySystem:GetAmmoStacks(Player, staticData.AmmoType) <= 0 then
+        self:PlayAnimation("ReloadAttempt", true)
+        InputSystem:ForceStopAction("Reload")
+        return
+    end
+
+    self:StopAnimation("Idle", 1)
+
+    self:PlayAnimation("Reload", true)
+    task.spawn(function()
+        ReloadRemote:CallServerAsync():andThen(function(ammo)
+            if ammo then
+                InputSystem:ForceStopAction("Reload")
+                self.CurrentItem.Ammo = ammo
+            end
+        end)
+    end)
     
+    self:PlayAnimation("Idle")
+end
+
+function ToolSystem:Fire()
+    InputSystem:ForceStopAction("Fire")
+
+    if PlayerStateController.IsAlive == false or self.CurrentItem == nil then return end
+    if self.CurrentItem.Ammo == 0 then
+        return
+    end
+    self.CurrentItem.Ammo -= 1
+
+    self.LastFireTick = tick()
     local isHipFire = InputSystem:IsStateActive("Aim") == false
 
-    -- TODO: ammo check
     self:PlayAnimation("Shoot")
     self.CurrentTool.ShootingPoint.Fire:Emit(8)
     self.CurrentTool.ShootingPoint.MuzzlePuff:Emit(20)

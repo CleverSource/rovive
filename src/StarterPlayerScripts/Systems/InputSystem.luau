@@ -69,7 +69,7 @@ function InputSystem:MapKeybinds()
     UserInputService.InputBegan:Connect(function(input, gameProcessedEvent)
         if not gameProcessedEvent then
             local keybind = self.Keybinds[input.KeyCode] or self.Keybinds[input.UserInputType]
-            if keybind and not self.Blocked[keybind] then
+            if keybind and not self.Blocked[keybind] and self.States[keybind] == false then
                 if BlockedStates[keybind] then
                     for _, state in BlockedStates[keybind] do
                         self:ToggleBlock(state)

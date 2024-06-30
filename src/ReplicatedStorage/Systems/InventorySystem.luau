@@ -6,20 +6,25 @@ local DataObjects = ReplicatedStorage.DataObjects
 local InventoryData = require(DataObjects.InventoryData)
 local ItemData = require(DataObjects.ItemData)
 
--- Game Data
+-- Modules
+local GetStaticData = require(ReplicatedStorage.Modules.GetStaticData)
+
+-- Game data
 local GameItemData = require(ReplicatedStorage.GameItemData)
 
 -- Store
 local Store = require(ReplicatedStorage:WaitForChild("Store")).new()
 
--- InventorySystem
-type _InternalInventoryData = {
-    RawData: { [number]: ItemData.ItemData },
-    Data: InventoryData.InventoryData
-}
-export type InternalInventoryData = _InternalInventoryData
-
+-- Inventory System
 local InventorySystem = {}
+
+export type FetchedItemData = {
+    Name: string,
+    Data: ItemData.ItemData,
+    StaticData: GameItemData.StaticData,
+    InventoryObj: Instance,
+    Slot: number
+}
 
 function InventorySystem:GetDataKey(inventoryObject: Instance)
     if inventoryObject:IsA("Player") then
@@ -45,21 +50,9 @@ function InventorySystem:InitializeInventory(inventoryData: InventoryData.Invent
     Store:SetState(state)
 end
 
-function InventorySystem:GetInventoryFromObject(inventoryObject: Instance): _InternalInventoryData
-    local state = Store:GetState()
-    local inventory = state.GlobalInventory
-    local storeKey = self:GetDataKey(inventoryObject)
-
-    return inventory[storeKey]
-end
-
 function InventorySystem:EquipItem(inventoryObject: Instance, slot: number)
     if inventoryObject:IsA("Player") then
-        local state = Store:GetState()
-        local inventory = state.GlobalInventory
-
-        local storeKey = self:GetDataKey(inventoryObject)
-        local inventoryData: _InternalInventoryData = inventory[storeKey]
+        local inventoryData = self:GetInventoryFromObject(inventoryObject)
 
         if slot and slot > inventoryData.Data.InventorySlots then
             warn("InventorySystem: Attempted to equip item from slot that does not exist.")
@@ -67,9 +60,8 @@ function InventorySystem:EquipItem(inventoryObject: Instance, slot: number)
         end
 
         if inventoryData then
-            local item = inventoryData.RawData[slot]
-            -- TODO: more proper way of checking this data is valid
-            if item.Name and GameItemData[item.Name].Equipable then
+            local item = self:GetItemData(inventoryObject, slot)
+            if item and item.StaticData.Equipable then
                 inventoryObject:SetAttribute("EquippedSlot", slot)
             end
         end
@@ -90,18 +82,12 @@ function InventorySystem:GetEquippedItemSlot(inventoryObject: Instance)
     end
 end
 
-function InventorySystem:GetItemFromSlot(inventoryObject: Instance, slot: number)
+function InventorySystem:GetInventoryFromObject(inventoryObject: Instance)
     local state = Store:GetState()
     local inventory = state.GlobalInventory
-
     local storeKey = self:GetDataKey(inventoryObject)
-    local inventoryData: _InternalInventoryData = inventory[storeKey]
 
-    if inventoryData then
-        return inventoryData.RawData[slot]
-    else
-        return nil
-    end
+    return inventory[storeKey]
 end
 
 function InventorySystem:AddItem(inventoryObject: Instance, slot: number, item: ItemData.ItemData)
@@ -109,9 +95,9 @@ function InventorySystem:AddItem(inventoryObject: Instance, slot: number, item: 
     local inventory = state.GlobalInventory
 
     local storeKey = self:GetDataKey(inventoryObject)
-    local inventoryData: _InternalInventoryData = inventory[storeKey]
+    local inventoryData = inventory[storeKey]
 
-    if GameItemData[item.Name] == nil then
+    if GetStaticData(item.Name) == nil then
         warn("InventorySystem: Attempted to add item that does not exist in GameItemData.")
         return
     end
@@ -126,6 +112,56 @@ function InventorySystem:AddItem(inventoryObject: Instance, slot: number, item: 
         Store:SetState(state)
     else
         warn("InventorySystem: Attempted to add item to non-existent inventory.")
+    end
+end
+
+function InventorySystem:GetAmmoStacks(inventoryObject: Instance, ammoType: string)
+    local inventoryData = self:GetInventoryFromObject(inventoryObject)
+
+    local bestStacks = {}
+    for slot, itemData in inventoryData.RawData do
+        if itemData.Name == ammoType then
+            table.insert(bestStacks, self:GetItemData(inventoryObject, slot))
+        end
+    end
+    return bestStacks
+end
+
+function InventorySystem:GetItemData(inventoryObject: Instance, slot: number): () -> FetchedItemData
+    local state = Store:GetState()
+    local inventory = state.GlobalInventory
+
+    local storeKey = self:GetDataKey(inventoryObject)
+    local inventoryData = inventory[storeKey]
+
+    local item = inventoryData.RawData[slot]
+    if item and item.Name ~= nil then
+        return {
+            Name = item.Name,
+            Data = item,
+            StaticData = GetStaticData(item.Name),
+            InventoryObj = inventoryObject,
+            Slot = slot
+        }
+    end
+
+    return nil
+end
+
+function InventorySystem:Update(itemData: FetchedItemData)
+    local inventoryObj = itemData.InventoryObj
+    local slot = itemData.Slot
+    
+    local state = Store:GetState()
+    local inventory = state.GlobalInventory
+
+    local storeKey = self:GetDataKey(inventoryObj)
+    local inventoryData = inventory[storeKey]
+    local item = inventoryData.RawData[slot]
+
+    if item then
+        inventoryData.RawData[slot] = itemData.Data
+        Store:SetState(state)
     end
 end
 

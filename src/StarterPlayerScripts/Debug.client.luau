@@ -23,6 +23,9 @@ local DebugHud = Assets.DebugHud
 -- Variables
 local PlayerGui = Players.LocalPlayer:WaitForChild("PlayerGui")
 
+-- Modules
+local GetStaticData = require(ReplicatedStorage.Modules.GetStaticData)
+
 -- Iris
 local Iris = require(ReplicatedStorage.Packages.Iris).Init()
 
@@ -49,8 +52,18 @@ UserInputService.InputBegan:Connect(function(input)
             task.spawn(function()
                 while task.wait() do
                     local activeItem = ToolSystem.CurrentItem
+                    if activeItem == nil then return end
                     local gunNameLabel = debugHudClone.Weapon.NameLabel
+                    local ammoLabel = debugHudClone.Weapon.AmmoLabel
+                    local staticData = GetStaticData(activeItem.Name)
                     gunNameLabel.Text = activeItem and ToolSystem.CurrentItem.Name or "nil"
+
+                    if staticData and staticData.MaxAmmo then
+                        ammoLabel.Visible = true
+                        ammoLabel.Text = activeItem and `<b>{ToolSystem.CurrentItem.Ammo}</b> / <i>{staticData.MaxAmmo}</i>`
+                    else
+                        ammoLabel.Text = "nil"
+                    end
                 end
             end)
         end
@@ -67,8 +80,8 @@ local function count(tbl: table)
 end
 
 Iris:Connect(function()
-    local playerInventory: InventorySystem.InternalInventoryData = InventorySystem:GetInventoryFromObject(Players.LocalPlayer)
-    local testCrateInventory: InventorySystem.InternalInventoryData = InventorySystem:GetInventoryFromObject(workspace:WaitForChild("TestCrate"))
+    local playerInventory = InventorySystem:GetInventoryFromObject(Players.LocalPlayer)
+    local testCrateInventory = InventorySystem:GetInventoryFromObject(workspace:WaitForChild("TestCrate"))
 
     Iris.Window({"Rovive Debug"}, {size = windowSize, isOpened = isWindowOpen})
         Iris.Text({`Most Important State: {InputSystem:GetImportantState()}`})

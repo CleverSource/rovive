@@ -1,14 +1,15 @@
 -- Main client setup script
 -- Services
 local Players = game:GetService("Players")
-local UserInputService = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
 
 -- Variables
 local Player = Players.LocalPlayer
 
 -- Systems
-local ToolSystem = require(script.Parent.Systems.ToolSystem)
-local InputSystem = require(script.Parent.Systems.InputSystem)
+local Systems = script.Parent:WaitForChild("Systems")
+local ToolSystem = require(Systems.ToolSystem)
+local InputSystem = require(Systems.InputSystem)
 
 -- Player State
 local PlayerStateController = require(script.Parent.PlayerStateController)
@@ -22,18 +23,15 @@ Player.CharacterAdded:Connect(function(character)
     PlayerStateController:AddCharacter(character)
 end)
 
-Player.CharacterAdded:Wait()
+task.spawn(function()
+    task.wait()
 
--- Handle player input
-InputSystem:MapKeybinds()
+    -- Handle player input
+    InputSystem:MapKeybinds()
 
--- TODO: SUPER DEBUG TEST
--- TODO: DOWNLOAD DOUBLE BARREL SKINS
-UserInputService.InputBegan:Connect(function(input)
-    if input.KeyCode == Enum.KeyCode.R then
-        ToolSystem:StopAnimation("Idle", 1)
-        ToolSystem:PlayAnimation("Reload", true)
-        require(script.Parent.Systems.InputSystem):ForceStopAction("Reload")
-        ToolSystem:PlayAnimation("Idle")
-    end
+    InputSystem.OnStateChanged:Connect(function(state, value)
+        if state == "Reload" and value == true then
+            ToolSystem:Reload()
+        end
+    end)
 end)

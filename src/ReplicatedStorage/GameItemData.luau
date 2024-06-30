@@ -11,6 +11,8 @@
         Weapon data properties:
         Equipable: boolean (default: false) -> Whether or not the item can be equipped
         WeaponType: WeaponType -> The type of weapon the item is
+        MaxAmmo: number -> The maximum amount of ammo the weapon can hold
+        AmmoType: Item -> The type of ammo the weapon uses, links to an in-game item
         PlayerDamage: number -> The amount of damage the weapon can deal
         BulletPattern: BulletPattern (default: "Single") -> The pattern of the bullet
         BulletSpread: number -> The spread of the bullet, only applicable if BulletPattern is set to "Spread"
@@ -28,6 +30,21 @@
 export type WeaponType = "Bow" | "Gun" | "Melee"
 export type BulletPattern = "Spread" | "Single"
 
+export type StaticData = {
+    Name: string,
+    MaxStack: number,
+    Equipable: boolean,
+    WeaponType: WeaponType,
+    PlayerDamage: number,
+    BulletPattern: BulletPattern,
+    BulletSpread: number,
+    BulletSpreadCount: number,
+    BulletSpeed: number,
+    BulletMaxDistance: number,
+    BulletAcceleration: Vector3,
+    FireRate: number
+}
+
 -- The single source of truth for item data in the game.
 local ItemData = {
     ["Wood"] = {
@@ -37,6 +54,8 @@ local ItemData = {
     ["Double Barrel"] = {
         Equipable = true,
         WeaponType = "Gun",
+        MaxAmmo = 2,
+        AmmoType = "Buckshot",
 
         PlayerDamage = 15,
 

@@ -13,5 +13,6 @@ return Net.CreateDefinitions({
 
     -- Combat
     HandleHit = Net.Definitions.ClientToServerEvent(),
+    Reload = Net.Definitions.ServerAsyncFunction()
     -- MoveItem = Net.Definitions.ServerAsyncFunction()
 })

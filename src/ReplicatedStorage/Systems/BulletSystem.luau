@@ -3,7 +3,6 @@
 -- from the server and thus, needs to handle incoming data instead of persistent data.
 
 -- Services
-local Debris = game:GetService("Debris")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 local Workspace = game:GetService("Workspace")
@@ -11,10 +10,10 @@ local Workspace = game:GetService("Workspace")
 -- Assets
 local Assets = ReplicatedStorage.Assets
 local BulletTrail = Assets.Trails.BulletTrail
-local WaterSplash = Assets.BulletEffects.WaterSplash
 
 -- Systems
 local CombatSystem = require(ReplicatedStorage.Systems.CombatSystem)
+local EffectsSystem = require(ReplicatedStorage.Systems.EffectsSystem)
 
 -- Packages
 local FastCast = require(ReplicatedStorage.Packages.FastCast)
@@ -57,21 +56,15 @@ local function OnRayHit(cast, result: RaycastResult, _, bullet)
 
     -- Handle water splashes
     if terrainHit and terrainHit.Instance == Workspace.Terrain and terrainHit.Material == Enum.Material.Water then
-        local water = WaterSplash:Clone()
-        water.Parent = Workspace.Debris
-        water.CFrame = CFrame.new(terrainHit.Position)
-        task.spawn(function()
-            water.Water.Enabled = true
-            task.wait(0.1)
-            water.Water.Enabled = false
-        end)
-        water.Dust:Emit(25)
-        -- TODO: sound and download all assets please. lol. please. download the stuff for trails & etc
-        Debris:AddItem(water, 5)
+        EffectsSystem:MakeWaterSplash(terrainHit.Position)
     end
 
     -- Handle bullet holes
-
+    if hit and hit.CanCollide == true then
+        if not hit.Parent:FindFirstChildOfClass("Humanoid") and not hit.Parent.Parent:FindFirstChildOfClass("Humanoid") then
+            EffectsSystem:MakeBulletHole()
+        end
+    end
 end
 
 ClientCaster.LengthChanged:Connect(OnLengthChanged)

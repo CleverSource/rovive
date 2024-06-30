@@ -48,7 +48,7 @@ local function OnRayHit(cast, result, velocity, bullet)
     local weaponData = GetStaticData(userData.Weapon.Name)
 
     if instance then
-        local hitHumanoid: Humanoid = instance.Parent:FindFirstChild("Humanoid")
+        local hitHumanoid: Humanoid = instance.Parent:FindFirstChildOfClass("Humanoid")
         if hitHumanoid then
             hitHumanoid:TakeDamage(weaponData.PlayerDamage)
         end

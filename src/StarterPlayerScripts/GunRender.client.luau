@@ -120,6 +120,8 @@ do
         -- Gun shooting
         if InputSystem:IsStateActive("Fire") and ToolSystem:IsReadyToFire() and ToolSystem:GetWeaponType() == "Gun" and not PlayerStateController:CharacterIsNearWall() then
             ToolSystem:Fire()
+        else
+            InputSystem:ForceStopAction("Fire")
         end
 
         local offsets = ToolSystem:GetToolOffsets(InventorySystem:GetItemFromSlot(Players.LocalPlayer, InventorySystem:GetEquippedItemSlot(Players.LocalPlayer)))

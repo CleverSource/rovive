@@ -3,6 +3,7 @@
 -- from the server and thus, needs to handle incoming data instead of persistent data.
 
 -- Services
+local Debris = game:GetService("Debris")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 local Workspace = game:GetService("Workspace")
@@ -10,6 +11,7 @@ local Workspace = game:GetService("Workspace")
 -- Assets
 local Assets = ReplicatedStorage.Assets
 local BulletTrail = Assets.Trails.BulletTrail
+local WaterSplash = Assets.BulletEffects.WaterSplash
 
 -- Systems
 local CombatSystem = require(ReplicatedStorage.Systems.CombatSystem)
@@ -49,8 +51,27 @@ local function OnLengthChanged(_, lastPoint, direction, length, _, bullet)
 end
 
 -- cast, result, velocity, bullet
-local function OnRayHit(_, _, _, bullet)
-    -- local hit = result.Instance
+local function OnRayHit(cast, result: RaycastResult, _, bullet)
+    local hit = result.Instance
+    local terrainHit: RaycastResult = cast.UserData.TerrainHit
+
+    -- Handle water splashes
+    if terrainHit and terrainHit.Instance == Workspace.Terrain and terrainHit.Material == Enum.Material.Water then
+        local water = WaterSplash:Clone()
+        water.Parent = Workspace.Debris
+        water.CFrame = CFrame.new(terrainHit.Position)
+        task.spawn(function()
+            water.Water.Enabled = true
+            task.wait(0.1)
+            water.Water.Enabled = false
+        end)
+        water.Dust:Emit(25)
+        -- TODO: sound and download all assets please. lol. please. download the stuff for trails & etc
+        Debris:AddItem(water, 5)
+    end
+
+    -- Handle bullet holes
+
 end
 
 ClientCaster.LengthChanged:Connect(OnLengthChanged)
@@ -67,10 +88,12 @@ end)
 function BulletSystem:ProjectileShoot(player: Player, weapon: ItemData.ItemData, bulletOrigin: CFrame)
     local weaponData = GetStaticData(weapon.Name)
 
+    -- TODO: some day sync up the spread algo between client & server
     for _ = 1, weaponData.BulletSpreadCount or 1 do
         task.spawn(function()
-            local rayStart, rayDirection = CombatSystem:CalculateRaycast(weapon, bulletOrigin, 20)
-            
+            local rayStart, rayDirection = CombatSystem:CalculateRaycast(weapon, bulletOrigin)
+            local hit = CombatSystem:FindHitLocation(player, { rayStart, rayDirection }, false)
+
             local raycastParams = RaycastParams.new()
             raycastParams.IgnoreWater = true
             raycastParams.FilterType = Enum.RaycastFilterType.Exclude
@@ -84,8 +107,9 @@ function BulletSystem:ProjectileShoot(player: Player, weapon: ItemData.ItemData,
             castBehavior.AutoIgnoreContainer = true
             castBehavior.CosmeticBulletContainer = Workspace.Bullets
             castBehavior.CosmeticBulletProvider = BulletCache
-    
-            ClientCaster:Fire(rayStart, rayDirection, weaponData.BulletSpeed, castBehavior)
+
+            local clientCast = ClientCaster:Fire(rayStart, rayDirection, weaponData.BulletSpeed, castBehavior)
+            clientCast.UserData = { TerrainHit = hit }
             RunService.RenderStepped:Wait()
         end)
     end

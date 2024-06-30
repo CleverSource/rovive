@@ -109,8 +109,7 @@ do
         
         if (origin.Position - humanoidRootPart.Position).Magnitude < MAX_RAYCAST_DISTANCE_TOLERANCE then
             for _ = 1, weaponData.BulletSpreadCount or 1 do
-                local timeOffset = 20 -- The elapsed time at which to calculate the bullet's ray.
-                local rayStart, rayDirection = CombatSystem:CalculateRaycast(activeWeapon, origin, timeOffset)
+                local rayStart, rayDirection = CombatSystem:CalculateRaycast(activeWeapon, origin)
                 
                 local cast = ServerCaster:Fire(rayStart, rayDirection, weaponData.BulletSpeed, castBehavior)
                 cast.UserData = {

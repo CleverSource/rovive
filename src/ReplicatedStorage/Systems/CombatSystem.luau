@@ -22,7 +22,8 @@ function CombatSystem:CanPierceObject()
     return false    
 end
 
-function CombatSystem:CalculateRaycast(weapon, origin, elapse)
+function CombatSystem:CalculateRaycast(weapon, origin)
+    local timeOffset = 20
     local staticData = GetStaticData(weapon.Name)
     local bulletSpeed = staticData.BulletSpeed or 100
 
@@ -35,27 +36,28 @@ function CombatSystem:CalculateRaycast(weapon, origin, elapse)
     local shootingAngle = math.rad(origin.LookVector.Y * 90)
     shootingAngle = shootingAngle < 0 and 0 or shootingAngle
 
-    local xChange = MetersToStuds(bulletSpeed * elapse)
-    local yChange = VerticalPositionAtTime(bulletSpeed, shootingAngle, elapse)
+    local xChange = MetersToStuds(bulletSpeed * timeOffset)
+    local yChange = VerticalPositionAtTime(bulletSpeed, shootingAngle, timeOffset)
 
     local raycastedPoint: CFrame = (origin * CFrame.new(0, yChange, 0)) + ((origin.LookVector + spread) * xChange)
     local rayStart = origin.Position
     local rayDistance = (origin.Position - raycastedPoint.Position).Magnitude
     local rayDirection = (raycastedPoint.Position - origin.Position).Unit * rayDistance
+    
     return rayStart, rayDirection, raycastedPoint
 end
 
-function CombatSystem:FindHitLocation(player, weapon, origin, elapse)
-    local rayStart, rayDirection, raycastedPoint = self:CalculateRaycast(weapon, origin, elapse)
+function CombatSystem:FindHitLocation(player, calculatedRayData, ignoreWater)
+    local rayStart, rayDirection = unpack(calculatedRayData)
     
     local raycastParams = RaycastParams.new()
-    raycastParams.IgnoreWater = true
+    raycastParams.IgnoreWater = ignoreWater == nil and true or false
     raycastParams.FilterType = Enum.RaycastFilterType.Exclude
     raycastParams.FilterDescendantsInstances = { CurrentCamera, player.Character, Workspace.Debris, Workspace.Bullets }
 
     local ray: RaycastResult = Workspace:Raycast(rayStart, rayDirection, raycastParams)
 
-    return ray, raycastedPoint
+    return ray
 end
 
 return CombatSystem

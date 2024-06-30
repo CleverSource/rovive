@@ -33,6 +33,7 @@ UserInputService.InputBegan:Connect(function(input)
     if input.KeyCode == Enum.KeyCode.R then
         ToolSystem:StopAnimation("Idle", 1)
         ToolSystem:PlayAnimation("Reload", true)
+        require(script.Parent.Systems.InputSystem):ForceStopAction("Reload")
         ToolSystem:PlayAnimation("Idle")
     end
 end)

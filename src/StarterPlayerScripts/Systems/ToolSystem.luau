@@ -324,7 +324,6 @@ function ToolSystem:Fire()
                 end
             end)
         else
-            -- TODO: send this to the server
             InputSystem:ForceStopAction("Fire")
             BulletSystem:ProjectileShoot(Player, self.CurrentItem, Camera.CFrame, self.CurrentTool.PrimaryPart)
             self:Unequip()

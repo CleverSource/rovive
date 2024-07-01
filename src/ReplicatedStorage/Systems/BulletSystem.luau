@@ -76,7 +76,7 @@ local function OnRayHit(cast, result: RaycastResult, _, bullet)
 
     -- Melee specific effects
     if weaponData.WeaponType == "Melee" then
-        print("Dropped item here")
+        print("Melee special effects")
     end
 end
 

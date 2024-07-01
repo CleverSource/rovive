@@ -87,6 +87,7 @@ do
         InventorySystem:UnequipItem(player)
     end)
 
+    -- TODO: thrown items become drops, gathering, AND weird bug w/ aiming while meleeing
     DropItemRemote:Connect(function(player, slot)
         -- TODO: other inventories, e.g. dropping from chests
         if InventorySystem:GetEquippedItemSlot(player) == tonumber(slot) then
@@ -229,7 +230,8 @@ do
 
         -- Testing
         InventorySystem:AddItem(player, 1, ItemData.new("Wood", 500))
-        InventorySystem:AddItem(player, 2, ItemData.new("Double Barrel", 1, 1337))
+        InventorySystem:AddItem(player, 2, ItemData.new("Double Barrel", 1))
+        InventorySystem:AddItem(player, 4, ItemData.new("Double Barrel", 1, 13372))
         InventorySystem:AddItem(player, 3, ItemData.new("Sawblade Axe"))
         InventorySystem:AddItem(player, 9, ItemData.new("Wood", 500))
         InventorySystem:AddItem(player, 10, ItemData.new("Buckshot", 1))

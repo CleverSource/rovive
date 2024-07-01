@@ -66,6 +66,7 @@ local ItemData = {
         MeleeMaxDistance = 7,
 
         BulletMaxDistance = 100,
+        BulletAcceleration = Vector3.new(0, -95, 0),
 
         FireRate = 1
     },

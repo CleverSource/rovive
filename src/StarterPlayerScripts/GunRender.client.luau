@@ -45,6 +45,9 @@ local function CalculateViewModelOffset()
                 -- TODO: make this check weapon hold type? (e.g. pistol, rifle, melee, etc)
                 cframe = cframe * CFrame.new(0, -0.75, 0) * CFrame.new(math.sin(currentTick * currentAnimationSpeed) / 40, math.sin(currentTick * (currentAnimationSpeed * 2)) / 5, math.sin(currentTick * currentAnimationSpeed) / 40)
                         * CFrame.Angles(0, math.rad(math.sin(currentTick * currentAnimationSpeed) * 8), 0)
+            elseif ToolSystem:GetWeaponType() == "Melee" then
+                cframe = cframe * CFrame.new(0, -1, 0) * CFrame.new(math.sin(currentTick * currentAnimationSpeed) / 40, math.sin(currentTick * (currentAnimationSpeed * 2)) / 5, 0) 
+                    * CFrame.Angles(0, math.rad(math.sin(currentTick * currentAnimationSpeed) * 8), -math.rad(math.sin(currentTick * currentAnimationSpeed) * 10))
             end
         end
     else
@@ -119,12 +122,23 @@ do
 
         local itemData = InventorySystem:GetItemData(Players.LocalPlayer, InventorySystem:GetEquippedItemSlot(Players.LocalPlayer))
         local offsets = ToolSystem:GetToolOffsets(itemData.Data)
+
+        -- Gun shooting
+        if ToolSystem:IsReadyToFire() then 
+            if  (ToolSystem:GetWeaponType() == "Gun" and not PlayerStateController:CharacterIsNearWall()) or ToolSystem:GetWeaponType() == "Melee" then
+                ToolSystem:Fire()
+            else
+                InputSystem:ForceStopAction("Fire")
+            end
+        end
         
         -- Aiming
         if InputSystem:IsStateActive("Aim") then
             if ToolSystem:GetWeaponType() == "Gun" then
-                local depth = offsets.AimDepth
-                originOffset = originOffset * CFrame.new(ToolSystem.SidewaysOffset, -ToolSystem.VerticalOffset, depth)
+                originOffset = originOffset * CFrame.new(ToolSystem.SidewaysOffset, -ToolSystem.VerticalOffset, offsets.AimDepth)
+            elseif ToolSystem:GetWeaponType() == "Melee" then
+                originOffset = originOffset * CFrame.new(offsets.Sideways, offsets.AimVertical, offsets.AimDepth)
+                                    * CFrame.Angles(math.rad(60), 0, -math.rad(30)) * CFrame.new(-0.5, 0, 0)
             else
                 originOffset = originOffset * CFrame.new(offsets.Sideways, offsets.Vertical, offsets.Depth)
             end

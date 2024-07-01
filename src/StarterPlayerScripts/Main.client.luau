@@ -1,8 +1,11 @@
 -- Main client setup script
 -- Services
 local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
-local UserInputService = game:GetService("UserInputService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+-- Remotes
+local Remotes = require(ReplicatedStorage.Remotes).Client
+local ReplicateRemote = Remotes:Get("Replicate") 
 
 -- Variables
 local Player = Players.LocalPlayer
@@ -11,6 +14,10 @@ local Player = Players.LocalPlayer
 local Systems = script.Parent:WaitForChild("Systems")
 local ToolSystem = require(Systems.ToolSystem)
 local InputSystem = require(Systems.InputSystem)
+
+-- ReplicatedStorage Systems
+local RepSystems = ReplicatedStorage.Systems
+local BulletSystem = require(RepSystems.BulletSystem)
 
 -- Player State
 local PlayerStateController = require(script.Parent.PlayerStateController)
@@ -24,6 +31,14 @@ Player.CharacterAdded:Connect(function(character)
     PlayerStateController:AddCharacter(character)
 end)
 
+-- Remote events
+ReplicateRemote:Connect(function(typeOfReplication, ...)
+    local data = {...}
+    if typeOfReplication == "BulletReplicate" then
+        BulletSystem:ProjectileShoot(unpack(data))
+    end
+end)
+
 task.spawn(function()
     task.wait(2)
 
@@ -33,13 +48,6 @@ task.spawn(function()
     InputSystem.OnStateChanged:Connect(function(state, value)
         if state == "Reload" and value == true then
             ToolSystem:Reload()
-        elseif state == "Fire" and value == true then
-            -- Gun shooting
-            if ToolSystem:IsReadyToFire() and ToolSystem:GetWeaponType() == "Gun" and not PlayerStateController:CharacterIsNearWall() then
-                ToolSystem:Fire()
-            else
-                InputSystem:ForceStopAction("Fire")
-            end
         end
     end)
 end)

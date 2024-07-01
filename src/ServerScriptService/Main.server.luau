@@ -20,6 +20,7 @@ local CombatSystem = require(ReplicatedStorage.Systems.CombatSystem)
 
 -- Game Data
 local GameBulletData = require(ReplicatedStorage.GameBulletData)
+local GameMeleeData = require(ReplicatedStorage.GameMeleeData)
 
 -- Variables
 local CurrentCamera = Workspace.CurrentCamera
@@ -32,6 +33,7 @@ local EquipItemRemote = Remotes:Get("EquipItem")
 local UnequipItemRemote = Remotes:Get("UnequipItem")
 local HandleHitRemote = Remotes:Get("HandleHit")
 local ReloadRemote = Remotes:Get("Reload")
+local ReplicateRemote = Remotes:Get("Replicate")
 
 -- Debug
 local print = require(ReplicatedStorage.Debug.Print)
@@ -43,7 +45,7 @@ local Store = require(ReplicatedStorage.Store).new()
 local MAX_RAYCAST_DISTANCE_TOLERANCE = 8.5 -- Calculated avg. distance a gun can shoot with an SEM of 2. This is legit.
 local ServerCaster = FastCast.new()
 
-local function OnRayHit(cast, result, velocity, bullet)
+local function OnRayHit(cast, result, _, _)
     local instance = result.Instance
     local userData = cast.UserData
     local weaponData = GetStaticData(userData.Weapon.Name)
@@ -134,40 +136,68 @@ do
         local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
         local activeWeapon = InventorySystem:GetItemData(player, InventorySystem:GetEquippedItemSlot(player))
 
-        if activeWeapon.Data.Ammo == 0 then
-            return
-        end
-
         if humanoid.Health <= 0 and activeWeapon == nil then
             return
         end
 
-        activeWeapon.Data.Ammo -= 1
-        InventorySystem:Update(activeWeapon)
-
         local weaponData = GetStaticData(activeWeapon.Data.Name)
-        
-        local raycastParams = RaycastParams.new()
-        raycastParams.IgnoreWater = true
-        raycastParams.FilterType = Enum.RaycastFilterType.Exclude
-        raycastParams.FilterDescendantsInstances = { CurrentCamera, player.Character, Workspace.Debris, Workspace.Bullets }
 
-        local castBehavior = FastCast.newBehavior()
-        castBehavior.MaxDistance = weaponData.BulletMaxDistance
-        castBehavior.CanPierceFunction = CombatSystem.CanPierceObject
-        castBehavior.RaycastParams = raycastParams
-        castBehavior.Acceleration = GameBulletData.BulletAcceleration + (weaponData.BulletAcceleration or Vector3.new(0, 0, 0))
-        castBehavior.AutoIgnoreContainer = true
+        if weaponData.WeaponType == "Gun" then
+            if activeWeapon.Data.Ammo == 0 then
+                return
+            end
+
+            activeWeapon.Data.Ammo -= 1
+            InventorySystem:Update(activeWeapon)
+            
+            local raycastParams = RaycastParams.new()
+            raycastParams.IgnoreWater = true
+            raycastParams.FilterType = Enum.RaycastFilterType.Exclude
+            raycastParams.FilterDescendantsInstances = { CurrentCamera, player.Character, Workspace.Debris, Workspace.Bullets }
+
+            local castBehavior = FastCast.newBehavior()
+            castBehavior.MaxDistance = weaponData.BulletMaxDistance
+            castBehavior.CanPierceFunction = CombatSystem.CanPierceObject
+            castBehavior.RaycastParams = raycastParams
+            castBehavior.Acceleration = GameBulletData.BulletAcceleration + (weaponData.BulletAcceleration or Vector3.new(0, 0, 0))
+            castBehavior.AutoIgnoreContainer = true
+            
+            if (origin.Position - humanoidRootPart.Position).Magnitude < MAX_RAYCAST_DISTANCE_TOLERANCE then
+                for _ = 1, weaponData.BulletSpreadCount or 1 do
+                    local rayStart, rayDirection = CombatSystem:CalculateRaycast(activeWeapon.Data, origin)
+                    
+                    local cast = ServerCaster:Fire(rayStart, rayDirection, weaponData.BulletSpeed or 100, castBehavior)
+                    cast.UserData = {
+                        Player = player,
+                        Weapon = activeWeapon.Data
+                    }
+                end
+
+                ReplicateRemote:SendToAllPlayersExcept({ player }, "BulletReplicate", player, activeWeapon, origin)
+            end
+        elseif weaponData.WeaponType == "Melee" then
+            if (origin.Position - humanoidRootPart.Position).Magnitude < MAX_RAYCAST_DISTANCE_TOLERANCE then
+                local rayStart, rayDirection = origin.Position, origin.LookVector * (weaponData.MeleeMaxDistance)
+                local hit = CombatSystem:FindHitLocation(player, { rayStart, rayDirection })
         
-        if (origin.Position - humanoidRootPart.Position).Magnitude < MAX_RAYCAST_DISTANCE_TOLERANCE then
-            for _ = 1, weaponData.BulletSpreadCount or 1 do
-                local rayStart, rayDirection = CombatSystem:CalculateRaycast(activeWeapon.Data, origin)
-                
-                local cast = ServerCaster:Fire(rayStart, rayDirection, weaponData.BulletSpeed, castBehavior)
-                cast.UserData = {
-                    Player = player,
-                    Weapon = activeWeapon.Data
-                }
+                if not hit then
+                    for i = 1, #GameMeleeData.MeleeOffsets do
+                        rayStart = (origin * GameMeleeData.MeleeOffsets[i]).Position
+                        hit = CombatSystem:FindHitLocation(player, { rayStart, rayDirection })
+        
+                        if hit then
+                            break
+                        end
+                    end
+                end
+
+                if hit then
+                    OnRayHit({
+                        UserData = {
+                            Weapon = activeWeapon.Data
+                        }
+                    }, hit, nil, nil)
+                end
             end
         end
     end)
@@ -182,8 +212,8 @@ do
 
         -- Testing
         InventorySystem:AddItem(player, 1, ItemData.new("Wood", 500))
-        InventorySystem:AddItem(player, 2, ItemData.new("Double Barrel", 1, 20))
-        InventorySystem:AddItem(player, 7, ItemData.new("Double Barrel"))
+        InventorySystem:AddItem(player, 2, ItemData.new("Double Barrel", 1, 1337))
+        InventorySystem:AddItem(player, 3, ItemData.new("Sawblade Axe"))
         InventorySystem:AddItem(player, 9, ItemData.new("Wood", 500))
         InventorySystem:AddItem(player, 10, ItemData.new("Buckshot", 1))
         InventorySystem:AddItem(player, 11, ItemData.new("Buckshot", 1))

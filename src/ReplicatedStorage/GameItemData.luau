@@ -3,6 +3,8 @@
     For example, if an item has a weapon type, it is EXPECTED to be a weapon, with appropriate weapon data filled.
     If a default is not listed, then it's default is nil, or "blank."
 
+    Under the hood, thrown melee items are just bullets.
+
     Formatted: [property_name]: property_type (default: default_value) -> Description
 
     ItemData:
@@ -14,6 +16,9 @@
         MaxAmmo: number -> The maximum amount of ammo the weapon can hold
         AmmoType: Item -> The type of ammo the weapon uses, links to an in-game item
         PlayerDamage: number -> The amount of damage the weapon can deal
+
+        MeleeMaxDistance: number -> The maximum distance the melee weapon can reach in studs
+
         BulletPattern: BulletPattern (default: "Single") -> The pattern of the bullet
         BulletSpread: number -> The spread of the bullet, only applicable if BulletPattern is set to "Spread"
         BulletSpreadCount: number -> The amount of bullets that are shot from a spread, only applicable if BulletPattern is set to "Spread"
@@ -23,6 +28,7 @@
                                         or even upwards, like a rocket launcher
                                         Simply increasing bullet fall speed can be done by setting the Y-axis to a negative value (meters/sec)
                                         This is useful for causing bullets to end sooner than their max distance, or to make them fall faster.
+
         FireRate: number -> The rate of fire in seconds
 ]]
 
@@ -49,6 +55,19 @@ export type StaticData = {
 local ItemData = {
     ["Wood"] = {
         MaxStack = 1000
+    },
+
+    ["Sawblade Axe"] = {
+        Equipable = true,
+        WeaponType = "Melee",
+
+        PlayerDamage = 20,
+
+        MeleeMaxDistance = 7,
+
+        BulletMaxDistance = 100,
+
+        FireRate = 1
     },
 
     ["Double Barrel"] = {

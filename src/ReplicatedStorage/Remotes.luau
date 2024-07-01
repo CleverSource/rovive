@@ -10,9 +10,12 @@ return Net.CreateDefinitions({
     -- Inventory
     EquipItem = Net.Definitions.ClientToServerEvent(),
     UnequipItem = Net.Definitions.ClientToServerEvent(),
+    -- MoveItem = Net.Definitions.ServerAsyncFunction()
 
     -- Combat
     HandleHit = Net.Definitions.ClientToServerEvent(),
-    Reload = Net.Definitions.ServerAsyncFunction()
-    -- MoveItem = Net.Definitions.ServerAsyncFunction()
+    Reload = Net.Definitions.ServerAsyncFunction(),
+
+    -- Replication
+    Replicate = Net.Definitions.ServerToClientEvent()
 })

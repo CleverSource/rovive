@@ -39,11 +39,12 @@ local BlockedStates = {
 local OneOrOtherStates = {
     ["Sprint"] = { "Crouch" },
     ["Crouch"] = { "Sprint" },
+    ["Aim"] = { "Fire" }
 }
 
 -- States that must be manually stopped via code
 local ManualStates = {
-    "Fire",
+    -- "Fire",
     "Reload"
 }
 
@@ -118,8 +119,14 @@ function InputSystem:ForceStopAction(state: string)
 
     if BlockedStates[state] then
         for _, blockedState in BlockedStates[state] do
-            self:ToggleBlock(blockedState)
+            self.Blocked[blockedState] = false
         end
+    end
+end
+
+function InputSystem:ForceStopActions(actions: table)
+    for _, action in actions do
+        self:ForceStopAction(action)
     end
 end
 

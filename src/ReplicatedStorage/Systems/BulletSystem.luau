@@ -3,12 +3,14 @@
 -- from the server and thus, needs to handle incoming data instead of persistent data.
 
 -- Services
+local Debris = game:GetService("Debris")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 local Workspace = game:GetService("Workspace")
 
 -- Assets
 local Assets = ReplicatedStorage.Assets
+local Tools = Assets.Tools
 local BulletTrail = Assets.Trails.BulletTrail
 
 -- Systems
@@ -51,6 +53,8 @@ end
 
 -- cast, result, velocity, bullet
 local function OnRayHit(cast, result: RaycastResult, _, bullet)
+    local weaponData = GetStaticData(cast.UserData.Weapon.Name)
+
     local hit = result.Instance
     local humanoid = hit.Parent:FindFirstChild("Humanoid") or hit.Parent.Parent:FindFirstChildOfClass("Humanoid")
     local terrainHit: RaycastResult = cast.UserData.TerrainHit
@@ -60,11 +64,19 @@ local function OnRayHit(cast, result: RaycastResult, _, bullet)
         EffectsSystem:MakeWaterSplash(terrainHit.Position)
     end
 
-    -- Handle bullet holes
-    if hit and hit.CanCollide == true then
-        if humanoid == nil then
-            EffectsSystem:MakeBulletHole(result)
+    -- Gun specific effects
+    if weaponData.WeaponType == "Gun" then
+        -- Handle bullet holes
+        if hit and hit.CanCollide == true then
+            if humanoid == nil then
+                EffectsSystem:MakeBulletHole(result)
+            end
         end
+    end
+
+    -- Melee specific effects
+    if weaponData.WeaponType == "Melee" then
+        print("Dropped item here")
     end
 end
 
@@ -74,12 +86,17 @@ ClientCaster.CastTerminating:Connect(function(cast)
     local rayInfo = cast.RayInfo
     if rayInfo and rayInfo.CosmeticBulletObject then
         local bullet = rayInfo.CosmeticBulletObject
-        BulletCache:ReturnPart(bullet)
+
+        if cast.UserData.UsingCache then
+            BulletCache:ReturnPart(bullet)
+        elseif cast.UserData.UsingCache == false then
+            bullet:Destroy()
+        end
     end
 end)
 
 -- Handle projectile shooting visuals
-function BulletSystem:ProjectileShoot(player: Player, weapon: ItemData.ItemData, bulletOrigin: CFrame)
+function BulletSystem:ProjectileShoot(player: Player, weapon: ItemData.ItemData, bulletOrigin: CFrame, bulletModel: Instance?)
     local weaponData = GetStaticData(weapon.Name)
 
     -- TODO: some day sync up the spread algo between client & server
@@ -100,15 +117,22 @@ function BulletSystem:ProjectileShoot(player: Player, weapon: ItemData.ItemData,
             castBehavior.Acceleration = GameBulletData.BulletAcceleration + (weaponData.BulletAcceleration or Vector3.new(0, 0, 0))
             castBehavior.AutoIgnoreContainer = true
             castBehavior.CosmeticBulletContainer = Workspace.Bullets
-            castBehavior.CosmeticBulletProvider = BulletCache
 
-            local clientCast = ClientCaster:Fire(rayStart, rayDirection, weaponData.BulletSpeed, castBehavior)
-            clientCast.UserData = { TerrainHit = hit }
+            if not bulletModel then
+                castBehavior.CosmeticBulletProvider = BulletCache
+            else
+                castBehavior.CosmeticBulletTemplate = bulletModel:Clone()
+            end
+
+            local clientCast = ClientCaster:Fire(rayStart, rayDirection, weaponData.BulletSpeed or 100, castBehavior)
+            clientCast.UserData = { TerrainHit = hit, UsingCache = not bulletModel, Weapon = weapon }
             RunService.RenderStepped:Wait()
         end)
     end
     
-    HandleHitRemote:SendToServer(bulletOrigin)
+    if weaponData.WeaponType == "Gun" then
+        HandleHitRemote:SendToServer(bulletOrigin)
+    end
 end
 
 return BulletSystem

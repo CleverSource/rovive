@@ -10,6 +10,7 @@ local Camera = Workspace.CurrentCamera
 
 -- Modules
 local Spring = require(ReplicatedStorage.Modules.Spring)
+local RandomNum = require(ReplicatedStorage.Modules.RandomNum)
 
 -- Assets
 local Assets = ReplicatedStorage.Assets
@@ -26,15 +27,18 @@ local PlayerStateController = require(script.Parent.Parent.PlayerStateController
 local InputSystem = require(script.Parent.InputSystem)
 local BulletSystem = require(ReplicatedStorage.Systems.BulletSystem)
 local InventorySystem = require(ReplicatedStorage.Systems.InventorySystem)
+local CombatSystem = require(ReplicatedStorage.Systems.CombatSystem)
 
 -- Constants
 local VIEWMODEL_TEXTURE_ID = "rbxassetid://18239537672"
 
 -- Game Data
 local GameItemData = require(ReplicatedStorage.GameItemData)
+local GameMeleeData = require(ReplicatedStorage.GameMeleeData)
 
 -- Remotes
 local Remotes = require(ReplicatedStorage.Remotes).Client
+local HandleHitRemote = Remotes:Get("HandleHit")
 local ReloadRemote = Remotes:Get("Reload")
 
 -- Data Objects
@@ -50,7 +54,7 @@ local ToolSystem = {
     VerticalOffset = nil, -- Aiming vertical offset
     SpringX = Spring.new(0, 0, 4),
     SpringY = Spring.new(0, 0, 4),
-    LastFireTick = 0 -- Last time weapon was fired
+    LastFireTick = 0, -- Last time weapon was fired
 }
 
 function ToolSystem:GetStaticData()
@@ -92,7 +96,7 @@ function ToolSystem:StopAnimation(animationName: string, fadeTime: number?)
 end
 
 function ToolSystem:PlayAnimation(animationName: string, yield: boolean?)
-    local animation = self.CurrentTool.Animations:FindFirstChild(animationName)
+    local animation = self.CurrentTool.Animations:FindFirstChild(animationName, true)
     if not animation then
         return
     end
@@ -100,7 +104,7 @@ function ToolSystem:PlayAnimation(animationName: string, yield: boolean?)
     local track: AnimationTrack = self.ViewModel.Humanoid:LoadAnimation(animation)
     track:Play()
     track.Name = animationName
-    track:AdjustSpeed(1)
+    track:AdjustSpeed(animation:GetAttribute("Speed") or 1)
 
     -- if track.Name == "Idle" then
     --     self.SidewaysOffset = self.CurrentTool.ScreenCenter.CFrame.X - self.Origin.CFrame.X
@@ -116,6 +120,8 @@ function ToolSystem:PlayAnimation(animationName: string, yield: boolean?)
             task.wait()
         end
     end
+
+    return track
 end
 
 function ToolSystem:SetupToolForEquip(item: ItemData.ItemData)
@@ -132,22 +138,23 @@ function ToolSystem:SetupToolForEquip(item: ItemData.ItemData)
     tool.RightArmWeld.Part0 = viewModel.RightArm
     tool.RightArmWeld.Part1 = tool.PrimaryPart
 
-    for _, effect in ShootingEffects:GetChildren() do
-        effect = effect:Clone()
-        effect.Parent = tool.ShootingPoint
-    end
-    
     self.SidewaysOffset = tool.ScreenCenter.CFrame.X - viewModel.HumanoidRootPart.CFrame.X
     self.VerticalOffset = tool.ScreenCenter.CFrame.Y - viewModel.HumanoidRootPart.CFrame.Y
     self.ViewModel = viewModel
     self.CurrentTool = tool
     self.CurrentItem = item
     self.Origin = viewModel.HumanoidRootPart
+
+    if self:GetWeaponType() == "Gun" then
+        for _, effect in ShootingEffects:GetChildren() do
+            effect = effect:Clone()
+            effect.Parent = tool.ShootingPoint
+        end
+    end
 end
 
 function ToolSystem:Unequip()
-    InputSystem:ForceStopAction("Fire")
-    InputSystem:ForceStopAction("Reload")
+    InputSystem:ForceStopActions({ "Fire", "Reload", "Aim" })
     self:ClearViewModel()
     self.ViewModel = nil
     self.CurrentTool = nil
@@ -156,8 +163,7 @@ function ToolSystem:Unequip()
 end
 
 function ToolSystem:ChangeTool(item: ItemData.ItemData)
-    InputSystem:ForceStopAction("Fire")
-    InputSystem:ForceStopAction("Reload")
+    InputSystem:ForceStopActions({ "Fire", "Reload", "Aim" })
     self:ClearViewModel()
     self:SetupToolForEquip(item)
     self:PlayAnimation("Idle")
@@ -215,19 +221,22 @@ function ToolSystem:GetToolOffsets(item: ItemData.ItemData)
         AimDepth = tool:GetAttribute("AimDepth") or 0,
         Depth = tool:GetAttribute("Depth") or 0,
         Sideways = tool:GetAttribute("Sideways") or 0,
-        Vertical = tool:GetAttribute("Vertical") or 0
+        Vertical = tool:GetAttribute("Vertical") or 0,
+        AimVertical = tool:GetAttribute("AimVertical") or 0
     }
 end
 
 function ToolSystem:IsReadyToFire()
     if not self.CurrentItem then return false end
     local staticData = self:GetStaticData()
-    return InputSystem:IsStateActive("Fire") == true and tick() - self.LastFireTick > staticData.FireRate
+    if staticData.WeaponType == "Gun" or staticData.WeaponType == "Melee" then
+        return InputSystem:IsStateActive("Fire") == true
+    end
 end
 
 function ToolSystem:Reload()
     local staticData = self:GetStaticData()
-    if PlayerStateController.IsAlive == false or self.CurrentItem == nil then 
+    if PlayerStateController.IsAlive == false or self.CurrentItem == nil or staticData.WeaponType ~= "Gun" then 
         InputSystem:ForceStopAction("Reload")
         return 
     end
@@ -241,6 +250,7 @@ function ToolSystem:Reload()
         return
     end
 
+    InputSystem:ForceStopAction("Aim")
     self:StopAnimation("Idle", 1)
 
     self:PlayAnimation("Reload", true)
@@ -257,26 +267,68 @@ function ToolSystem:Reload()
 end
 
 function ToolSystem:Fire()
-    InputSystem:ForceStopAction("Fire")
-
     if PlayerStateController.IsAlive == false or self.CurrentItem == nil then return end
-    if self.CurrentItem.Ammo == 0 then
-        return
-    end
-    self.CurrentItem.Ammo -= 1
-
-    self.LastFireTick = tick()
-    local isHipFire = InputSystem:IsStateActive("Aim") == false
-
-    self:PlayAnimation("Shoot")
-    self.CurrentTool.ShootingPoint.Fire:Emit(8)
-    self.CurrentTool.ShootingPoint.MuzzlePuff:Emit(20)
+    local staticData = self:GetStaticData()
+    if tick() - self.LastFireTick < staticData.FireRate then return end
 
     -- Handle shooting and local hit detection
     if self:GetWeaponType() == "Gun" then
-        local bulletOrigin = isHipFire and self.CurrentTool.ShootingPoint.CFrame or Camera.CFrame
+        InputSystem:ForceStopAction("Fire")
+        if self.CurrentItem.Ammo == 0 then
+            return
+        end
+        self.CurrentItem.Ammo -= 1
+    
+        self.LastFireTick = tick()
+        local isHipFire = InputSystem:IsStateActive("Aim") == false
+    
+        self:PlayAnimation("Shoot")
+        self.CurrentTool.ShootingPoint.Fire:Emit(8)
+        self.CurrentTool.ShootingPoint.MuzzlePuff:Emit(20)
+        task.spawn(function()
+            self.CurrentTool.ShootingPoint.Flash.Enabled = true
+            task.wait(0.05)
+            self.CurrentTool.ShootingPoint.Flash.Enabled = false
+        end)
 
+        local bulletOrigin = isHipFire and self.CurrentTool.ShootingPoint.CFrame or Camera.CFrame
         BulletSystem:ProjectileShoot(Player, self.CurrentItem, bulletOrigin)
+    elseif self:GetWeaponType() == "Melee" then
+        self.LastFireTick = tick()
+        
+        if not InputSystem:IsStateActive("Aim") then
+            local rayStart, rayDirection = Camera.CFrame.Position, Camera.CFrame.LookVector * (staticData.MeleeMaxDistance)
+            local hit = CombatSystem:FindHitLocation(Player, { rayStart, rayDirection })
+            local humanoid = hit and (hit.Instance.Parent:FindFirstChild("Humanoid") or hit.Instance.Parent.Parent:FindFirstChildOfClass("Humanoid"))
+    
+            if not hit then
+                for i = 1, #GameMeleeData.MeleeOffsets do
+                    rayStart = (Camera.CFrame * GameMeleeData.MeleeOffsets[i]).Position
+                    hit = CombatSystem:FindHitLocation(Player, { rayStart, rayDirection })
+                    humanoid = hit and (hit.Instance.Parent:FindFirstChild("Humanoid") or hit.Instance.Parent.Parent:FindFirstChildOfClass("Humanoid"))
+    
+                    if hit and humanoid then
+                        break
+                    end
+                end
+            end
+    
+            local animationType = hit and "Hits" or "Swings"
+            local animationTypeFolder = self.CurrentTool.Animations:FindFirstChild(animationType)
+            local randomAnimation = animationTypeFolder:GetChildren()[RandomNum(1, #animationTypeFolder:GetChildren())]
+            local playedAnimation = self:PlayAnimation(randomAnimation.Name)
+    
+            playedAnimation:GetMarkerReachedSignal("Hit"):Connect(function()
+                if hit then
+                    HandleHitRemote:SendToServer(Camera.CFrame)
+                end
+            end)
+        else
+            -- TODO: send this to the server
+            InputSystem:ForceStopAction("Fire")
+            BulletSystem:ProjectileShoot(Player, self.CurrentItem, Camera.CFrame, self.CurrentTool.PrimaryPart)
+            self:Unequip()
+        end
     end
 end
 

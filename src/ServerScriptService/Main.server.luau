@@ -17,6 +17,7 @@ local FastCast = require(ReplicatedStorage.Packages.FastCast)
 -- Systems
 local InventorySystem = require(ReplicatedStorage.Systems.InventorySystem)
 local CombatSystem = require(ReplicatedStorage.Systems.CombatSystem)
+local EffectsSystem = require(ReplicatedStorage.Systems.EffectsSystem)
 
 -- Game Data
 local GameBulletData = require(ReplicatedStorage.GameBulletData)
@@ -31,6 +32,7 @@ local GetStateRemote = Remotes:Get("GetState")
 local StateChangedRemote = Remotes:Get("StateChanged")
 local EquipItemRemote = Remotes:Get("EquipItem")
 local UnequipItemRemote = Remotes:Get("UnequipItem")
+local DropItemRemote = Remotes:Get("DropItem")
 local HandleHitRemote = Remotes:Get("HandleHit")
 local ReloadRemote = Remotes:Get("Reload")
 local ReplicateRemote = Remotes:Get("Replicate")
@@ -83,6 +85,21 @@ do
 
     UnequipItemRemote:Connect(function(player)
         InventorySystem:UnequipItem(player)
+    end)
+
+    DropItemRemote:Connect(function(player, slot)
+        -- TODO: other inventories, e.g. dropping from chests
+        if InventorySystem:GetEquippedItemSlot(player) == tonumber(slot) then
+            InventorySystem:UnequipItem(player)
+        end
+
+        local item = InventorySystem:GetItemData(player, tonumber(slot))
+        if item then
+            item.Data = {}
+            InventorySystem:Update(item)
+            
+            EffectsSystem:MakeDroppedItem(item)
+        end
     end)
 
     ReloadRemote:SetCallback(function(player)

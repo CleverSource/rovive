@@ -10,6 +10,7 @@ return Net.CreateDefinitions({
     -- Inventory
     EquipItem = Net.Definitions.ClientToServerEvent(),
     UnequipItem = Net.Definitions.ClientToServerEvent(),
+    DropItem = Net.Definitions.ClientToServerEvent(),
     -- MoveItem = Net.Definitions.ServerAsyncFunction()
 
     -- Combat

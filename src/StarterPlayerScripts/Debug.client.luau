@@ -15,6 +15,7 @@ local FastCast = require(ReplicatedStorage.Packages.FastCast)
 local Remotes = require(ReplicatedStorage.Remotes).Client
 local EquipItemRemote = Remotes:Get("EquipItem")
 local UnequipItemRemote = Remotes:Get("UnequipItem")
+local DropItemRemote = Remotes:Get("DropItem")
 
 -- Assets
 local Assets = ReplicatedStorage.Assets
@@ -41,34 +42,39 @@ local Devs = {
     ["472765608"] = true -- baydocks
 }
 
-UserInputService.InputBegan:Connect(function(input)
+UserInputService.InputBegan:Connect(function(input, gameProcessedEvent)
+    if gameProcessedEvent then return end
     if input.KeyCode == openKeybind and Devs[tostring(Players.LocalPlayer.UserId)] then
-        if PlayerGui:FindFirstChild(DebugHud.Name) == nil then
-            local debugHudClone = DebugHud:Clone()
-            debugHudClone.Parent = PlayerGui
-            debugHudRef:set(debugHudClone)
+        isWindowOpen:set(not isWindowOpen:get())
+    end
+end)
 
-            -- Debug Hud
-            task.spawn(function()
-                while task.wait() do
-                    local activeItem = ToolSystem.CurrentItem
-                    if activeItem ~= nil then
-                        local gunNameLabel = debugHudClone.Weapon.NameLabel
-                        local ammoLabel = debugHudClone.Weapon.AmmoLabel
-                        local staticData = GetStaticData(activeItem.Name)
-                        gunNameLabel.Text = activeItem and ToolSystem.CurrentItem.Name or "nil"
+task.spawn(function()
+    task.wait()
+    if PlayerGui:FindFirstChild(DebugHud.Name) == nil then
+        local debugHudClone = DebugHud:Clone()
+        debugHudClone.Parent = PlayerGui
+        debugHudRef:set(debugHudClone)
 
-                        if staticData and staticData.MaxAmmo then
-                            ammoLabel.Visible = true
-                            ammoLabel.Text = activeItem and `<b>{ToolSystem.CurrentItem.Ammo}</b> / <i>{staticData.MaxAmmo}</i>`
-                        else
-                            ammoLabel.Text = "nil"
-                        end
+        -- Debug Hud
+        task.spawn(function()
+            while task.wait() do
+                local activeItem = ToolSystem.CurrentItem
+                if activeItem ~= nil then
+                    local gunNameLabel = debugHudClone.Weapon.NameLabel
+                    local ammoLabel = debugHudClone.Weapon.AmmoLabel
+                    local staticData = GetStaticData(activeItem.Name)
+                    gunNameLabel.Text = activeItem and ToolSystem.CurrentItem.Name or "nil"
+
+                    if staticData and staticData.MaxAmmo then
+                        ammoLabel.Visible = true
+                        ammoLabel.Text = activeItem and `<b>{ToolSystem.CurrentItem.Ammo}</b> / <i>{staticData.MaxAmmo}</i>`
+                    else
+                        ammoLabel.Text = "nil"
                     end
                 end
-            end)
-        end
-        isWindowOpen:set(not isWindowOpen:get())
+            end
+        end)
     end
 end)
 
@@ -117,6 +123,16 @@ Iris:Connect(function()
             UnequipItemRemote:SendToServer()
         end
 
+        if Iris.Button({"Drop Item"}).clicked() then
+            DropItemRemote:SendToServer(input.state.text.value)
+        end
+
+        if Iris.Button({"Drop All Items"}).clicked() then
+            for i = 1, playerInventory.Data.InventorySlots do
+                DropItemRemote:SendToServer(i)
+            end
+        end
+
         if Iris.Button({"Toggle Debug Hud"}).clicked() then
             local debugHud = debugHudRef:get()
             debugHud.Enabled = not debugHud.Enabled
@@ -152,13 +168,20 @@ Iris:Connect(function()
 
         if playerInventory ~= nil then
             Iris.Tree({"Local Inventory Data"})
-                for i = 1, playerInventory.Data.InventorySlots do
-                    if count(playerInventory.RawData[i]) == 0 then
+                for i, data in ipairs(playerInventory.RawData) do
+                    if count(data) == 0 then
                         Iris.Text({`Slot {i}: Empty`})
                     else
-                        Iris.Text({`Slot {i}: {playerInventory.RawData[i].Name} x{playerInventory.RawData[i].Stack}`})
+                        Iris.Text({`Slot {i}: {data.Name} x{data.Stack}`})
                     end
                 end
+                -- for i = 1, playerInventory.Data.InventorySlots do
+                --     if count(playerInventory.RawData[i]) == 0 then
+                --         Iris.Text({`Slot {i}: Empty`})
+                --     else
+                --         Iris.Text({`Slot {i}: {playerInventory.RawData[i].Name} x{playerInventory.RawData[i].Stack}`})
+                --     end
+                -- end
             Iris.End()
         end
     Iris.End()

@@ -120,6 +120,8 @@ function EffectsSystem:MakeDroppedItem(itemData: InventorySystem.FetchedItemData
             end
         end)
     end)
+
+    Debris:AddItem(droppedItemObj, 300)
 end
 
 return EffectsSystem

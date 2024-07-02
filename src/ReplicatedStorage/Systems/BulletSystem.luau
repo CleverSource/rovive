@@ -65,7 +65,9 @@ local function OnRayHit(cast, result: RaycastResult, _, _)
 end
 
 ClientCaster.RayHit:Connect(OnRayHit)
-ClientCaster.LengthChanged:Connect(CombatSystem.OnLengthChanged)
+ClientCaster.LengthChanged:Connect(function(cast, lastPoint, direction, length, velocity, bullet)
+    CombatSystem:OnLengthChanged(cast, lastPoint, direction, length, velocity, bullet)
+end)
 ClientCaster.CastTerminating:Connect(function(cast)
     local rayInfo = cast.RayInfo
     if rayInfo and rayInfo.CosmeticBulletObject then

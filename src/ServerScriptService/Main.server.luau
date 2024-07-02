@@ -74,6 +74,7 @@ local function OnRayHit(cast, result: RaycastResult, _, bullet)
             local toolObj = tool.PrimaryPart:Clone()
             Debris:AddItem(toolObj, 300)
             
+            -- TODO: iron out the math on this in the future, specifically, items showing through walls
             local _, _, _, R00, R01, R02, R10, R11, R12, R20, R21, R22 = bullet.CFrame:GetComponents()
             local rotationMatrix = CFrame.new(0, 0, 0, R00, R01, R02, R10, R11, R12, R20, R21, R22)
             local rotationOffset = CFrame.Angles(math.rad(-120), 0, 0)
@@ -81,7 +82,7 @@ local function OnRayHit(cast, result: RaycastResult, _, bullet)
             toolObj.CFrame = CFrame.new(result.Position) * rotationMatrix * rotationOffset
             toolObj.Parent = Workspace.DroppedItems
             toolObj.CanCollide = false
-            toolObj.Anchored = true
+            toolObj.Anchored = false
 
             WeldBetween(toolObj, instance)
 
@@ -124,7 +125,7 @@ local function HandleHitDetection(player: Player, activeWeapon: ItemData.ItemDat
     local tool = Tools:FindFirstChild(activeWeapon.Data.Name)
     if weaponData.WeaponType == "Melee" and tool ~= nil then
         castBehavior.CosmeticBulletContainer = Workspace.Debris
-        castBehavior.CosmeticBulletTemplate = tool.PrimaryPart
+        castBehavior.CosmeticBulletTemplate = tool.PrimaryPart:Clone()
     end
 
     for _ = 1, weaponData.BulletSpreadCount or 1 do
@@ -143,7 +144,9 @@ local function HandleHitDetection(player: Player, activeWeapon: ItemData.ItemDat
 end
 
 ServerCaster.RayHit:Connect(OnRayHit)
-ServerCaster.LengthChanged:Connect(CombatSystem.OnLengthChanged)
+ServerCaster.LengthChanged:Connect(function(cast, lastPoint, direction, length, velocity, bullet)
+    CombatSystem:OnLengthChanged(cast, lastPoint, direction, length, velocity, bullet)
+end)
 ServerCaster.CastTerminating:Connect(function(cast)
     local rayInfo = cast.RayInfo
     if rayInfo and rayInfo.CosmeticBulletObject then

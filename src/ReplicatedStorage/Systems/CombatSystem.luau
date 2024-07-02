@@ -19,7 +19,15 @@ end
 local CombatSystem = {}
 
 function CombatSystem:CanPierceObject()
-    return false    
+    return false
+end
+
+function CombatSystem:OnLengthChanged(_, lastPoint, direction, length, _, bullet)
+    if bullet then
+        local bulletLength = bullet.Size.Z / 2
+        local offset = CFrame.new(0, 0, -(length - bulletLength))
+        bullet.CFrame = CFrame.lookAt(lastPoint, lastPoint + direction):ToWorldSpace(offset)
+    end
 end
 
 function CombatSystem:CalculateRaycast(weapon, origin)

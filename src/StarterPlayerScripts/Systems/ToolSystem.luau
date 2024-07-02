@@ -325,7 +325,7 @@ function ToolSystem:Fire()
             end)
         else
             InputSystem:ForceStopAction("Fire")
-            BulletSystem:ProjectileShoot(Player, self.CurrentItem, Camera.CFrame, self.CurrentTool.PrimaryPart)
+            HandleHitRemote:SendToServer(Camera.CFrame, true)
             self:Unequip()
         end
     end

@@ -90,7 +90,7 @@ function InventorySystem:GetInventoryFromObject(inventoryObject: Instance)
     return inventory[storeKey]
 end
 
-function InventorySystem:AddItem(inventoryObject: Instance, slot: number, item: ItemData.ItemData)
+function InventorySystem:AddNewItem(inventoryObject: Instance, slot: number, item: ItemData.ItemData)
     local state = Store:GetState()
     local inventory = state.GlobalInventory
 

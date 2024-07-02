@@ -10,7 +10,6 @@ local Workspace = game:GetService("Workspace")
 
 -- Assets
 local Assets = ReplicatedStorage.Assets
-local Tools = Assets.Tools
 local BulletTrail = Assets.Trails.BulletTrail
 
 -- Systems
@@ -38,21 +37,11 @@ local HandleHitRemote = Remotes:Get("HandleHit")
 local BulletSystem = {}
 
 -- Hit detection
--- TODO: other bullet trail types e.g. rockets
 local BulletCache = PartCache.new(BulletTrail, 100, Workspace.Bullets)
 local ClientCaster = FastCast.new()
 
--- cast, lastPoint, direction, length, velocity, bullet
-local function OnLengthChanged(_, lastPoint, direction, length, _, bullet)
-    if bullet then
-        local bulletLength = bullet.Size.Z / 2
-        local offset = CFrame.new(0, 0, -(length - bulletLength))
-        bullet.CFrame = CFrame.lookAt(lastPoint, lastPoint + direction):ToWorldSpace(offset)
-    end
-end
-
 -- cast, result, velocity, bullet
-local function OnRayHit(cast, result: RaycastResult, _, bullet)
+local function OnRayHit(cast, result: RaycastResult, _, _)
     local weaponData = GetStaticData(cast.UserData.Weapon.Name)
 
     local hit = result.Instance
@@ -73,15 +62,10 @@ local function OnRayHit(cast, result: RaycastResult, _, bullet)
             end
         end
     end
-
-    -- Melee specific effects
-    if weaponData.WeaponType == "Melee" then
-        print("Melee special effects")
-    end
 end
 
-ClientCaster.LengthChanged:Connect(OnLengthChanged)
 ClientCaster.RayHit:Connect(OnRayHit)
+ClientCaster.LengthChanged:Connect(CombatSystem.OnLengthChanged)
 ClientCaster.CastTerminating:Connect(function(cast)
     local rayInfo = cast.RayInfo
     if rayInfo and rayInfo.CosmeticBulletObject then
@@ -130,9 +114,7 @@ function BulletSystem:ProjectileShoot(player: Player, weapon: ItemData.ItemData,
         end)
     end
     
-    if weaponData.WeaponType == "Gun" then
-        HandleHitRemote:SendToServer(bulletOrigin)
-    end
+    HandleHitRemote:SendToServer(bulletOrigin)
 end
 
 return BulletSystem

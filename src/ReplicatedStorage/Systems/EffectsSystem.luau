@@ -5,6 +5,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 -- Modules
 local RandomNum = require(ReplicatedStorage.Modules.RandomNum)
+local StabilityAnchor = require(ReplicatedStorage.Modules.StabilityAnchor)
 
 -- Assets
 local Assets = ReplicatedStorage.Assets
@@ -109,18 +110,7 @@ function EffectsSystem:MakeDroppedItem(itemData: InventorySystem.FetchedItemData
     droppedItemObj.Parent = Workspace.DroppedItems
     primaryPart:SetNetworkOwner(inventoryObj)
 
-    task.spawn(function()
-        local anchorConn
-        anchorConn = primaryPart.Touched:Connect(function(hit)
-            anchorConn:Disconnect()
-            task.wait(1)
-            if hit == Workspace.Terrain or hit:IsDescendantOf(Workspace.PlayerBuildings) then
-                primaryPart.Anchored = true
-                primaryPart.CanCollide = false
-            end
-        end)
-    end)
-
+    StabilityAnchor(primaryPart)
     Debris:AddItem(droppedItemObj, 300)
 end
 

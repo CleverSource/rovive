@@ -1,5 +1,6 @@
 -- Main server script, all setup happens here.
 -- Services
+local Debris = game:GetService("Debris")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Workspace = game:GetService("Workspace")
@@ -10,9 +11,15 @@ local ItemData = require(ReplicatedStorage.DataObjects.ItemData)
 
 -- Modules
 local GetStaticData = require(ReplicatedStorage.Modules.GetStaticData)
+local StabilityAnchor = require(ReplicatedStorage.Modules.StabilityAnchor)
+local WeldBetween = require(ReplicatedStorage.Modules.WeldBetween)
 
 -- Packages
 local FastCast = require(ReplicatedStorage.Packages.FastCast)
+
+-- Assets
+local Assets = ReplicatedStorage.Assets
+local Tools = Assets.Tools
 
 -- Systems
 local InventorySystem = require(ReplicatedStorage.Systems.InventorySystem)
@@ -44,23 +51,109 @@ local print = require(ReplicatedStorage.Debug.Print)
 local Store = require(ReplicatedStorage.Store).new()
 
 -- Server hit detection
-local MAX_RAYCAST_DISTANCE_TOLERANCE = 8.5 -- Calculated avg. distance a gun can shoot with an SEM of 2. This is legit.
+local MAX_RAYCAST_DISTANCE_TOLERANCE = 10 -- Calculated avg. distance a gun can shoot with an SEM of 2. This is legit.
 local ServerCaster = FastCast.new()
 
-local function OnRayHit(cast, result, _, _)
+-- Handle hit, after it's been detected
+local function OnRayHit(cast, result: RaycastResult, _, bullet)
     local instance = result.Instance
     local userData = cast.UserData
-    local weaponData = GetStaticData(userData.Weapon.Name)
+    local weaponData = userData.Weapon.StaticData
 
     if instance then
+        -- Deal damage to players
         local hitHumanoid: Humanoid = instance.Parent:FindFirstChildOfClass("Humanoid")
         if hitHumanoid then
             hitHumanoid:TakeDamage(weaponData.PlayerDamage)
         end
+
+        -- Create thrown tool object on ground
+        local tool = Tools:FindFirstChild(userData.Weapon.Name)
+        if weaponData.WeaponType == "Melee" and tool and bullet then
+            local conns = {}
+            local toolObj = tool.PrimaryPart:Clone()
+            Debris:AddItem(toolObj, 300)
+            
+            local _, _, _, R00, R01, R02, R10, R11, R12, R20, R21, R22 = bullet.CFrame:GetComponents()
+            local rotationMatrix = CFrame.new(0, 0, 0, R00, R01, R02, R10, R11, R12, R20, R21, R22)
+            local rotationOffset = CFrame.Angles(math.rad(-120), 0, 0)
+            
+            toolObj.CFrame = CFrame.new(result.Position) * rotationMatrix * rotationOffset
+            toolObj.Parent = Workspace.DroppedItems
+            toolObj.CanCollide = false
+            toolObj.Anchored = true
+
+            WeldBetween(toolObj, instance)
+
+            if hitHumanoid then
+                table.insert(conns, hitHumanoid.Died:Connect(function()
+                    toolObj.CanCollide = true
+                    toolObj.Anchored = false
+                    StabilityAnchor(toolObj)
+                    for _, conn in conns do conn:Disconnect() end
+                end))
+            end
+
+            table.insert(conns, instance:GetPropertyChangedSignal("Parent"):Connect(function()
+                toolObj.CanCollide = true
+                toolObj.Anchored = false
+                StabilityAnchor(toolObj)
+                for _, conn in conns do conn:Disconnect() end
+            end))
+        end
+    end
+end
+
+-- Hit detection
+local function HandleHitDetection(player: Player, activeWeapon: ItemData.ItemData, origin: CFrame)
+    local weaponData = activeWeapon.StaticData
+
+    local raycastParams = RaycastParams.new()
+    raycastParams.IgnoreWater = true
+    raycastParams.FilterType = Enum.RaycastFilterType.Exclude
+    raycastParams.FilterDescendantsInstances = { CurrentCamera, player.Character, Workspace.Debris, Workspace.Bullets }
+
+    local castBehavior = FastCast.newBehavior()
+    castBehavior.MaxDistance = weaponData.BulletMaxDistance
+    castBehavior.CanPierceFunction = CombatSystem.CanPierceObject
+    castBehavior.RaycastParams = raycastParams
+    castBehavior.Acceleration = GameBulletData.BulletAcceleration + (weaponData.BulletAcceleration or Vector3.new(0, 0, 0))
+    castBehavior.AutoIgnoreContainer = true
+
+    -- Handle throwable rendering on the server
+    local tool = Tools:FindFirstChild(activeWeapon.Data.Name)
+    if weaponData.WeaponType == "Melee" and tool ~= nil then
+        castBehavior.CosmeticBulletContainer = Workspace.Debris
+        castBehavior.CosmeticBulletTemplate = tool.PrimaryPart
+    end
+
+    for _ = 1, weaponData.BulletSpreadCount or 1 do
+        local rayStart, rayDirection = CombatSystem:CalculateRaycast(activeWeapon.Data, origin)
+        
+        local cast = ServerCaster:Fire(rayStart, rayDirection, weaponData.BulletSpeed or 100, castBehavior)
+        cast.UserData = {
+            Player = player,
+            Weapon = activeWeapon
+        }
+    end
+
+    if weaponData.WeaponType == "Gun" then
+        ReplicateRemote:SendToAllPlayersExcept({ player }, "BulletReplicate", player, activeWeapon, origin)
     end
 end
 
 ServerCaster.RayHit:Connect(OnRayHit)
+ServerCaster.LengthChanged:Connect(CombatSystem.OnLengthChanged)
+ServerCaster.CastTerminating:Connect(function(cast)
+    local rayInfo = cast.RayInfo
+    if rayInfo and rayInfo.CosmeticBulletObject then
+        local bullet = rayInfo.CosmeticBulletObject
+
+        if bullet then
+            bullet:Destroy()
+        end
+    end
+end)
 
 -- State remotes
 do
@@ -87,7 +180,7 @@ do
         InventorySystem:UnequipItem(player)
     end)
 
-    -- TODO: thrown items become drops, gathering, AND weird bug w/ aiming while meleeing
+    -- TODO: gathering, AND weird bug w/ aiming while meleeing
     DropItemRemote:Connect(function(player, slot)
         -- TODO: other inventories, e.g. dropping from chests
         if InventorySystem:GetEquippedItemSlot(player) == tonumber(slot) then
@@ -148,7 +241,7 @@ do
         return newAmmo
     end)
 
-    HandleHitRemote:Connect(function(player: Player, origin: CFrame)
+    HandleHitRemote:Connect(function(player: Player, origin: CFrame, thrownTool: boolean?)
         local character = player.Character
         local humanoid = character:FindFirstChild("Humanoid")
         local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
@@ -160,7 +253,19 @@ do
 
         local weaponData = GetStaticData(activeWeapon.Data.Name)
 
-        if weaponData.WeaponType == "Gun" then
+        if (origin.Position - humanoidRootPart.Position).Magnitude > MAX_RAYCAST_DISTANCE_TOLERANCE then
+            print(`Declined hit {(origin.Position - humanoidRootPart.Position).Magnitude}`)
+            return
+        end
+
+        if weaponData.WeaponType == "Melee" and thrownTool == true then
+            local oldActiveWeapon = table.clone(activeWeapon)
+            InventorySystem:UnequipItem(player)
+            activeWeapon.Data = {}
+            InventorySystem:Update(activeWeapon)
+
+            HandleHitDetection(player, oldActiveWeapon, origin)
+        elseif weaponData.WeaponType == "Gun"  then
             if activeWeapon.Data.Ammo == 0 then
                 return
             end
@@ -168,54 +273,30 @@ do
             activeWeapon.Data.Ammo -= 1
             InventorySystem:Update(activeWeapon)
             
-            local raycastParams = RaycastParams.new()
-            raycastParams.IgnoreWater = true
-            raycastParams.FilterType = Enum.RaycastFilterType.Exclude
-            raycastParams.FilterDescendantsInstances = { CurrentCamera, player.Character, Workspace.Debris, Workspace.Bullets }
-
-            local castBehavior = FastCast.newBehavior()
-            castBehavior.MaxDistance = weaponData.BulletMaxDistance
-            castBehavior.CanPierceFunction = CombatSystem.CanPierceObject
-            castBehavior.RaycastParams = raycastParams
-            castBehavior.Acceleration = GameBulletData.BulletAcceleration + (weaponData.BulletAcceleration or Vector3.new(0, 0, 0))
-            castBehavior.AutoIgnoreContainer = true
-            
-            if (origin.Position - humanoidRootPart.Position).Magnitude < MAX_RAYCAST_DISTANCE_TOLERANCE then
-                for _ = 1, weaponData.BulletSpreadCount or 1 do
-                    local rayStart, rayDirection = CombatSystem:CalculateRaycast(activeWeapon.Data, origin)
-                    
-                    local cast = ServerCaster:Fire(rayStart, rayDirection, weaponData.BulletSpeed or 100, castBehavior)
-                    cast.UserData = {
-                        Player = player,
-                        Weapon = activeWeapon.Data
-                    }
-                end
-
-                ReplicateRemote:SendToAllPlayersExcept({ player }, "BulletReplicate", player, activeWeapon, origin)
-            end
+            HandleHitDetection(player, activeWeapon, origin)
         elseif weaponData.WeaponType == "Melee" then
-            if (origin.Position - humanoidRootPart.Position).Magnitude < MAX_RAYCAST_DISTANCE_TOLERANCE then
-                local rayStart, rayDirection = origin.Position, origin.LookVector * (weaponData.MeleeMaxDistance)
-                local hit = CombatSystem:FindHitLocation(player, { rayStart, rayDirection })
-        
-                if not hit then
-                    for i = 1, #GameMeleeData.MeleeOffsets do
-                        rayStart = (origin * GameMeleeData.MeleeOffsets[i]).Position
-                        hit = CombatSystem:FindHitLocation(player, { rayStart, rayDirection })
-        
-                        if hit then
-                            break
-                        end
+            -- Old hit detection
+            local rayStart, rayDirection = origin.Position, origin.LookVector * (weaponData.MeleeMaxDistance)
+            local hit = CombatSystem:FindHitLocation(player, { rayStart, rayDirection })
+    
+            if not hit then
+                for i = 1, #GameMeleeData.MeleeOffsets do
+                    rayStart = (origin * GameMeleeData.MeleeOffsets[i]).Position
+                    hit = CombatSystem:FindHitLocation(player, { rayStart, rayDirection })
+    
+                    if hit then
+                        break
                     end
                 end
+            end
 
-                if hit then
-                    OnRayHit({
-                        UserData = {
-                            Weapon = activeWeapon.Data
-                        }
-                    }, hit, nil, nil)
-                end
+            if hit then
+                OnRayHit({
+                    UserData = {
+                        Player = player,
+                        Weapon = activeWeapon
+                    }
+                }, hit, nil, nil)
             end
         end
     end)
@@ -229,18 +310,18 @@ do
         InventorySystem:InitializeInventory(inventoryData)
 
         -- Testing
-        InventorySystem:AddItem(player, 1, ItemData.new("Wood", 500))
-        InventorySystem:AddItem(player, 2, ItemData.new("Double Barrel", 1))
-        InventorySystem:AddItem(player, 4, ItemData.new("Double Barrel", 1, 13372))
-        InventorySystem:AddItem(player, 3, ItemData.new("Sawblade Axe"))
-        InventorySystem:AddItem(player, 9, ItemData.new("Wood", 500))
-        InventorySystem:AddItem(player, 10, ItemData.new("Buckshot", 1))
-        InventorySystem:AddItem(player, 11, ItemData.new("Buckshot", 1))
-        InventorySystem:AddItem(player, 12, ItemData.new("Buckshot", 3))
-        InventorySystem:AddItem(player, 13, ItemData.new("Buckshot", 1337))
+        InventorySystem:AddNewItem(player, 1, ItemData.new("Wood", 500))
+        InventorySystem:AddNewItem(player, 2, ItemData.new("Double Barrel", 1))
+        InventorySystem:AddNewItem(player, 4, ItemData.new("Double Barrel", 1, 13372))
+        InventorySystem:AddNewItem(player, 3, ItemData.new("Sawblade Axe"))
+        InventorySystem:AddNewItem(player, 9, ItemData.new("Wood", 500))
+        InventorySystem:AddNewItem(player, 10, ItemData.new("Buckshot", 1))
+        InventorySystem:AddNewItem(player, 11, ItemData.new("Buckshot", 1))
+        InventorySystem:AddNewItem(player, 12, ItemData.new("Buckshot", 3))
+        InventorySystem:AddNewItem(player, 13, ItemData.new("Buckshot", 1337))
         local crate = workspace.TestCrate
         InventorySystem:InitializeInventory(InventoryData.new(crate, 10))
-        InventorySystem:AddItem(crate, 2, ItemData.new("Double Barrel"))
+        InventorySystem:AddNewItem(crate, 2, ItemData.new("Double Barrel"))
 
         task.spawn(function()
             task.wait(2)

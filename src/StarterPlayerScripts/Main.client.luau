@@ -17,7 +17,6 @@ local PickupItemRemote = Remotes:Get("PickupItem")
 local Systems = script.Parent:WaitForChild("Systems")
 local ToolSystem = require(Systems.ToolSystem)
 local InputSystem = require(Systems.InputSystem)
-local InventorySystem = require(Systems.InventorySystem)
 
 -- Modules
 local CountTable = require(ReplicatedStorage.Modules.CountTable)
@@ -25,6 +24,7 @@ local CountTable = require(ReplicatedStorage.Modules.CountTable)
 -- ReplicatedStorage Systems
 local RepSystems = ReplicatedStorage.Systems
 local BulletSystem = require(RepSystems.BulletSystem)
+local InventorySystem = require(RepSystems.InventorySystem)
 
 -- Player State
 local PlayerStateController = require(script.Parent.PlayerStateController)

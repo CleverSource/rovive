@@ -9,7 +9,6 @@ local ItemData = require(DataObjects.ItemData)
 
 -- Modules
 local GetStaticData = require(ReplicatedStorage.Modules.GetStaticData)
-local CountTable = require(ReplicatedStorage.Modules.CountTable)
 
 -- Systems
 local EffectsSystem = require(ReplicatedStorage.Systems.EffectsSystem)

@@ -1,4 +1,5 @@
 -- Services
+local HttpService = game:GetService("HttpService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 -- Data Objects
@@ -8,7 +9,9 @@ local ItemData = require(DataObjects.ItemData)
 
 -- Modules
 local GetStaticData = require(ReplicatedStorage.Modules.GetStaticData)
-local CountTable = require(ReplicatedStorage.Modules.CountTable)
+
+-- Systems
+local EffectsSystem = require(ReplicatedStorage.Systems.EffectsSystem)
 
 -- Game data
 local GameItemData = require(ReplicatedStorage.GameItemData)
@@ -91,6 +94,7 @@ function InventorySystem:GetInventoryFromObject(inventoryObject: Instance)
     return inventory[storeKey]
 end
 
+-- TODO: hella testing
 function InventorySystem:AddItem(inventoryObject: Instance, item: ItemData.ItemData)
     local state = Store:GetState()
     local inventory = state.GlobalInventory
@@ -99,13 +103,52 @@ function InventorySystem:AddItem(inventoryObject: Instance, item: ItemData.ItemD
     local inventoryData = inventory[storeKey]
 
     if inventoryData then
-        print("Attempt to add", item)
+        -- Check if other items in inventory of same name
+        -- if true, add to stack, if possible
+        -- if not possible, check if remainder is possible, and add to full on that stack, and create new inventory item of remainder
+        -- if not possible, create completely new inventory item
+        -- If no other stacks of name exist, then create completely new item
+        -- If inventory is full, decline adding item
 
-        Store:SetState(state)
+        local stackType = item.Name
+        local bestStacks = self:GetBestStacks(inventoryObject, stackType)
+        for _, stack in ipairs(bestStacks) do
+            if stack.Data.Stack < stack.StaticData.MaxStack then
+                local remainder = stack.StaticData.MaxStack - stack.Data.Stack
+                if item.Stack <= remainder then
+                    stack.Data.Stack = stack.Data.Stack + item.Stack
+                    self:Update(stack)
+                else
+                    stack.Data.Stack = stack.StaticData.MaxStack
+                    item.Stack = item.Stack - remainder
+                    self:Update(stack)
+                end
+            end
+        end
+
+        self:AddNewItem(inventoryObject, item)
     end
 end
 
-function InventorySystem:AddNewItem(inventoryObject: Instance, slot: number, item: ItemData.ItemData)
+function InventorySystem:IsInventoryFull(inventoryObject: Instance)
+    local inventoryData = self:GetInventoryFromObject(inventoryObject)
+    for _, item in inventoryData.RawData do
+        if item.Name == nil then
+            return false
+        end
+    end
+    return true
+end
+
+function InventorySystem:IsInventoryTrulyFull(inventoryObject: Instance)
+    if self:IsInventoryFull(inventoryObject) then
+        for _, item in self:GetInventoryFromObject(inventoryObject) do
+            print(item)
+        end
+    end
+end
+
+function InventorySystem:AddNewItem(inventoryObject: Instance, item: ItemData.ItemData, slot: number?)
     local state = Store:GetState()
     local inventory = state.GlobalInventory
 
@@ -117,8 +160,22 @@ function InventorySystem:AddNewItem(inventoryObject: Instance, slot: number, ite
         return
     end
 
-    if slot > inventoryData.Data.InventorySlots then
-        warn("InventorySystem: Attempted to add item to slot that does not exist.")
+    if slot then
+        if slot > inventoryData.Data.InventorySlots then
+            warn("InventorySystem: Attempted to add item to slot that does not exist.")
+            return
+        end
+    else
+        for i = 1, inventoryData.Data.InventorySlots do
+            if inventoryData.RawData[i].Name == nil then
+                slot = i
+            end
+        end
+    end
+
+    if slot == nil then
+        item.ItemId = HttpService:GenerateGUID(false)
+        EffectsSystem:MakeDroppedItem(self:CreateItemData(item, inventoryObject, nil))
         return
     end
 
@@ -130,16 +187,27 @@ function InventorySystem:AddNewItem(inventoryObject: Instance, slot: number, ite
     end
 end
 
-function InventorySystem:GetAmmoStacks(inventoryObject: Instance, ammoType: string)
+function InventorySystem:GetBestStacks(inventoryObject: Instance, stackType: string)
     local inventoryData = self:GetInventoryFromObject(inventoryObject)
 
     local bestStacks = {}
     for slot, itemData in inventoryData.RawData do
-        if itemData.Name == ammoType then
+        local staticData = GetStaticData(itemData.Name)
+        if itemData.Name == stackType and staticData.MaxStack > 1 then
             table.insert(bestStacks, self:GetItemData(inventoryObject, slot))
         end
     end
     return bestStacks
+end
+
+function InventorySystem:CreateItemData(item: ItemData.ItemData, inventoryObject: Instance, slot: number): FetchedItemData
+    return {
+        Name = item.Name,
+        Data = item,
+        StaticData = GetStaticData(item.Name),
+        InventoryObj = inventoryObject,
+        Slot = slot
+    }
 end
 
 function InventorySystem:GetItemData(inventoryObject: Instance, slot: number): () -> FetchedItemData
@@ -151,13 +219,7 @@ function InventorySystem:GetItemData(inventoryObject: Instance, slot: number): (
 
     local item = inventoryData.RawData[slot]
     if item and item.Name ~= nil then
-        return {
-            Name = item.Name,
-            Data = item,
-            StaticData = GetStaticData(item.Name),
-            InventoryObj = inventoryObject,
-            Slot = slot
-        }
+        return self:CreateItemData(item, inventoryObject, slot)
     end
 
     return nil

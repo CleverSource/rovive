@@ -63,6 +63,7 @@ task.spawn(function()
         if state == "Reload" and value == true then
             ToolSystem:Reload()
         elseif state == "Interact" and value == true then
+            -- TODO: pickup animation
             PickupItemRemote:SendToServer(PlayerStateController.HoveredItem)
         end
     end)

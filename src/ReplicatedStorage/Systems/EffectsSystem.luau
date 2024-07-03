@@ -17,9 +17,6 @@ local DroppedItemHolders = { Assets.Tools, Assets.DroppedItemTemplates }
 local WaterSplash = BulletEffects.WaterSplash
 local BulletHole = BulletEffects.BulletHole
 
--- Systems
-local InventorySystem = require(ReplicatedStorage.Systems.InventorySystem)
-
 -- Effects System
 local EffectsSystem = {}
 
@@ -56,7 +53,7 @@ function EffectsSystem:MakeBulletHole(ray: RaycastResult)
     Debris:AddItem(bulletHole, 10)
 end
 
-function EffectsSystem:MakeDroppedItem(itemData: InventorySystem.FetchedItemData)
+function EffectsSystem:MakeDroppedItem(itemData)
     local inventoryObj = itemData.InventoryObj
     if inventoryObj:IsA("Player") then
         inventoryObj = inventoryObj.Character.Head

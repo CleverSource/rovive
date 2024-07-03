@@ -244,7 +244,7 @@ function ToolSystem:Reload()
         InputSystem:ForceStopAction("Reload")
         return
     end
-    if #InventorySystem:GetAmmoStacks(Player, staticData.AmmoType) <= 0 then
+    if #InventorySystem:GetBestStacks(Player, staticData.AmmoType) <= 0 then
         self:PlayAnimation("ReloadAttempt", true)
         InputSystem:ForceStopAction("Reload")
         return

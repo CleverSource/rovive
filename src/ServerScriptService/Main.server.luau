@@ -78,6 +78,7 @@ local function OnRayHit(cast, result: RaycastResult, _, bullet)
             Debris:AddItem(toolModel, 300)
             
             -- TODO: iron out the math on this in the future, specifically, items showing through walls
+            -- TODO: tools despawn they never hit the ground or an object
             local _, _, _, R00, R01, R02, R10, R11, R12, R20, R21, R22 = bullet.CFrame:GetComponents()
             local rotationMatrix = CFrame.new(0, 0, 0, R00, R01, R02, R10, R11, R12, R20, R21, R22)
             local rotationOffset = CFrame.Angles(math.rad(-120), 0, 0)
@@ -205,7 +206,6 @@ do
     end)
 
     -- Drop item
-    -- TODO: gathering, AND weird bug w/ aiming while meleeing
     DropItemRemote:Connect(function(player, slot)
         -- TODO: other inventories, e.g. dropping from chests
         if InventorySystem:GetEquippedItemSlot(player) == tonumber(slot) then
@@ -232,7 +232,7 @@ do
             return 0
         end
 
-        local ammoStacks = InventorySystem:GetAmmoStacks(player, activeWeapon.StaticData.AmmoType)
+        local ammoStacks = InventorySystem:GetBestStacks(player, activeWeapon.StaticData.AmmoType)
         local maxAmmo = activeWeapon.StaticData.MaxAmmo
         local obtainedAmmo = 0
         local ammoNeeded = (maxAmmo - activeWeapon.Data.Ammo)
@@ -338,22 +338,19 @@ do
         InventorySystem:InitializeInventory(inventoryData)
 
         -- TODO: Testing
-        InventorySystem:AddNewItem(player, 1, ItemData.new("Wood", 500))
-        InventorySystem:AddNewItem(player, 2, ItemData.new("Double Barrel", 1))
-        InventorySystem:AddNewItem(player, 4, ItemData.new("Double Barrel", 1, 13372))
-        InventorySystem:AddNewItem(player, 3, ItemData.new("Sawblade Axe"))
-        InventorySystem:AddNewItem(player, 9, ItemData.new("Wood", 500))
-        InventorySystem:AddNewItem(player, 10, ItemData.new("Buckshot", 1))
-        InventorySystem:AddNewItem(player, 11, ItemData.new("Buckshot", 1))
-        InventorySystem:AddNewItem(player, 12, ItemData.new("Buckshot", 3))
-        InventorySystem:AddNewItem(player, 13, ItemData.new("Buckshot", 1337))
+        for i = 1, inventoryData.InventorySlots do
+            InventorySystem:AddNewItem(player, ItemData.new("Wood", 999))
+        end
+
         local crate = workspace.TestCrate
         InventorySystem:InitializeInventory(InventoryData.new(crate, 10))
-        InventorySystem:AddNewItem(crate, 2, ItemData.new("Double Barrel"))
+        InventorySystem:AddNewItem(crate, ItemData.new("Double Barrel"), 2)
 
         task.spawn(function()
             task.wait(2)
-            InventorySystem:EquipItem(player, 2)
+            EffectsSystem:MakeDroppedItem(InventorySystem:GetItemData(player, 1))
+            EffectsSystem:MakeDroppedItem(InventorySystem:CreateItemData(ItemData.new("Double Barrel"), crate, nil))
+            -- InventorySystem:EquipItem(player, 2)
         end)
     end
 

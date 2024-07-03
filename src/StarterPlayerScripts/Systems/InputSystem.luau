@@ -39,6 +39,7 @@ local BlockedStates = {
 local OneOrOtherStates = {
     ["Sprint"] = { "Crouch" },
     ["Crouch"] = { "Sprint" },
+    -- TODO: weird bug w/ aiming while meleeing
     ["Aim"] = { "Fire" }
 }
 

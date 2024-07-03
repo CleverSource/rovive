@@ -7,7 +7,9 @@ local PlayerStateController = {
     Humanoid = nil,
     HumanoidRootPart = nil,
     HumanoidState = nil,
-    LastPosition = Vector2.new()
+    LastPosition = Vector2.new(),
+    HoveredItem = nil,
+    Conns = {}
 }
 
 function PlayerStateController:AddCharacter(character: Instance)
@@ -24,17 +26,18 @@ function PlayerStateController:AddCharacter(character: Instance)
     self.IsAlive = true
     self.LastPosition = Vector2.new(humanoidRootPart.Position.X, humanoidRootPart.Position.Z)
 
-    humanoid.Died:Connect(function()
+    table.insert(self.Conns, humanoid.Died:Connect(function()
         self.Character = nil
         self.Humanoid = nil
         self.HumanoidRootPart = nil
         self.IsAlive = false
         self.LastPosition = nil
-    end)
+        for _, conn in self.Conns do conn:Disconnect() end
+    end))
 
-    humanoid.StateChanged:Connect(function(_, new)
+    table.insert(self.Conns, humanoid.StateChanged:Connect(function(_, new)
         self.HumanoidState = new
-    end)
+    end))
 end
 
 function PlayerStateController:CharacterIsNearWall()

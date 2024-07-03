@@ -1,4 +1,5 @@
 -- Services
+local HttpService = game:GetService("HttpService")
 local Workspace = game:GetService("Workspace")
 local Debris = game:GetService("Debris")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -97,6 +98,10 @@ function EffectsSystem:MakeDroppedItem(itemData: InventorySystem.FetchedItemData
             end
         end
     end
+
+    -- Set item data
+    droppedItemObj.Name = itemData.Data.ItemId
+    droppedItemObj:SetAttribute("ItemData", HttpService:JSONEncode(itemData.Data))
 
     if raycastResult ~= nil and (raycastResult.Instance:IsA("BasePart") or raycastResult.Instance:IsA("Terrain")) then
         droppedItemObj:PivotTo(CFrame.new(inventoryObj.Position) + Vector3.new(0, 2, 0))

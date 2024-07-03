@@ -8,6 +8,7 @@ local ItemData = require(DataObjects.ItemData)
 
 -- Modules
 local GetStaticData = require(ReplicatedStorage.Modules.GetStaticData)
+local CountTable = require(ReplicatedStorage.Modules.CountTable)
 
 -- Game data
 local GameItemData = require(ReplicatedStorage.GameItemData)
@@ -88,6 +89,20 @@ function InventorySystem:GetInventoryFromObject(inventoryObject: Instance)
     local storeKey = self:GetDataKey(inventoryObject)
 
     return inventory[storeKey]
+end
+
+function InventorySystem:AddItem(inventoryObject: Instance, item: ItemData.ItemData)
+    local state = Store:GetState()
+    local inventory = state.GlobalInventory
+
+    local storeKey = self:GetDataKey(inventoryObject)
+    local inventoryData = inventory[storeKey]
+
+    if inventoryData then
+        print("Attempt to add", item)
+
+        Store:SetState(state)
+    end
 end
 
 function InventorySystem:AddNewItem(inventoryObject: Instance, slot: number, item: ItemData.ItemData)

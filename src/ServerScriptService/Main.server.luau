@@ -1,6 +1,7 @@
 -- Main server script, all setup happens here.
 -- Services
 local Debris = game:GetService("Debris")
+local HttpService = game:GetService("HttpService")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Workspace = game:GetService("Workspace")
@@ -40,6 +41,7 @@ local StateChangedRemote = Remotes:Get("StateChanged")
 local EquipItemRemote = Remotes:Get("EquipItem")
 local UnequipItemRemote = Remotes:Get("UnequipItem")
 local DropItemRemote = Remotes:Get("DropItem")
+local PickupItemRemote = Remotes:Get("PickupItem")
 local HandleHitRemote = Remotes:Get("HandleHit")
 local ReloadRemote = Remotes:Get("Reload")
 local ReplicateRemote = Remotes:Get("Replicate")
@@ -71,8 +73,9 @@ local function OnRayHit(cast, result: RaycastResult, _, bullet)
         local tool = Tools:FindFirstChild(userData.Weapon.Name)
         if weaponData.WeaponType == "Melee" and tool and bullet then
             local conns = {}
-            local toolObj = tool.PrimaryPart:Clone()
-            Debris:AddItem(toolObj, 300)
+            local toolModel = tool:Clone()
+            local toolObj = toolModel.PrimaryPart
+            Debris:AddItem(toolModel, 300)
             
             -- TODO: iron out the math on this in the future, specifically, items showing through walls
             local _, _, _, R00, R01, R02, R10, R11, R12, R20, R21, R22 = bullet.CFrame:GetComponents()
@@ -80,11 +83,13 @@ local function OnRayHit(cast, result: RaycastResult, _, bullet)
             local rotationOffset = CFrame.Angles(math.rad(-120), 0, 0)
             
             toolObj.CFrame = CFrame.new(result.Position) * rotationMatrix * rotationOffset
-            toolObj.Parent = Workspace.DroppedItems
+            toolModel.Parent = Workspace.DroppedItems
             toolObj.CanCollide = false
             toolObj.Anchored = false
 
             WeldBetween(toolObj, instance)
+            toolModel.Name = userData.Weapon.Data.ItemId
+            toolModel:SetAttribute("ItemData", HttpService:JSONEncode(userData.Weapon.Data))
 
             if hitHumanoid then
                 table.insert(conns, hitHumanoid.Died:Connect(function()
@@ -172,6 +177,7 @@ end
 
 -- Remotes
 do
+    -- Equip/Unequip item
     EquipItemRemote:Connect(function(player, slot)
         if slot == 0 or slot == nil then
             InventorySystem:UnequipItem(player)
@@ -183,6 +189,22 @@ do
         InventorySystem:UnequipItem(player)
     end)
 
+    -- Pickup item
+    PickupItemRemote:Connect(function(player, itemData)
+        if itemData == nil then
+            return
+        end
+        
+        local physicalItem = Workspace.DroppedItems:FindFirstChild(itemData.ItemId)
+        if physicalItem then
+            local trustedItemData = physicalItem:GetAttribute("ItemData")
+            physicalItem:Destroy()
+
+            InventorySystem:AddItem(player, HttpService:JSONDecode(trustedItemData))
+        end
+    end)
+
+    -- Drop item
     -- TODO: gathering, AND weird bug w/ aiming while meleeing
     DropItemRemote:Connect(function(player, slot)
         -- TODO: other inventories, e.g. dropping from chests
@@ -192,13 +214,15 @@ do
 
         local item = InventorySystem:GetItemData(player, tonumber(slot))
         if item then
+            local oldItem = table.clone(item) 
             item.Data = {}
             InventorySystem:Update(item)
             
-            EffectsSystem:MakeDroppedItem(item)
+            EffectsSystem:MakeDroppedItem(oldItem)
         end
     end)
 
+    -- Reload item
     ReloadRemote:SetCallback(function(player)
         local character = player.Character
         local humanoid = character:FindFirstChild("Humanoid")
@@ -244,6 +268,7 @@ do
         return newAmmo
     end)
 
+    -- Handle hit
     HandleHitRemote:Connect(function(player: Player, origin: CFrame, thrownTool: boolean?)
         local character = player.Character
         local humanoid = character:FindFirstChild("Humanoid")
@@ -312,7 +337,7 @@ do
         local inventoryData = InventoryData.new(player, 36)
         InventorySystem:InitializeInventory(inventoryData)
 
-        -- Testing
+        -- TODO: Testing
         InventorySystem:AddNewItem(player, 1, ItemData.new("Wood", 500))
         InventorySystem:AddNewItem(player, 2, ItemData.new("Double Barrel", 1))
         InventorySystem:AddNewItem(player, 4, ItemData.new("Double Barrel", 1, 13372))

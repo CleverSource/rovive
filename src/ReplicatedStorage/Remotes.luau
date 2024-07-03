@@ -11,6 +11,7 @@ return Net.CreateDefinitions({
     EquipItem = Net.Definitions.ClientToServerEvent(),
     UnequipItem = Net.Definitions.ClientToServerEvent(),
     DropItem = Net.Definitions.ClientToServerEvent(),
+    PickupItem = Net.Definitions.ClientToServerEvent(),
     -- MoveItem = Net.Definitions.ServerAsyncFunction()
 
     -- Combat

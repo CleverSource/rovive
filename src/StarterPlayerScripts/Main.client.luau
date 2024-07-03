@@ -74,7 +74,7 @@ task.spawn(function()
         elseif state == "Interact" and value == true then
             if PlayerStateController.HoveredItem ~= nil then
                 local hoveredItemData = PlayerStateController.HoveredItem
-                if CountTable(InventorySystem:GetBestStacks({Player}, hoveredItemData.Name)) == 0 and InventorySystem:IsInventoryFull(player) == true then
+                if CountTable(InventorySystem:GetBestStacks(Player, hoveredItemData.Name)) == 0 and InventorySystem:IsInventoryFull(Player) == true then
                     return
                 end
 

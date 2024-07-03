@@ -149,13 +149,13 @@ function InventorySystem:IsInventoryFull(inventoryObject: Instance)
     return true
 end
 
-function InventorySystem:IsInventoryTrulyFull(inventoryObject: Instance)
-    if self:IsInventoryFull(inventoryObject) then
-        for _, item in self:GetInventoryFromObject(inventoryObject) do
-            print(item)
-        end
-    end
-end
+-- function InventorySystem:IsInventoryTrulyFull(inventoryObject: Instance)
+--     if self:IsInventoryFull(inventoryObject) then
+--         for _, item in self:GetInventoryFromObject(inventoryObject) do
+--             print(item)
+--         end
+--     end
+-- end
 
 function InventorySystem:AddNewItem(inventoryObject: Instance, item: ItemData.ItemData, slot: number?)
     local state = Store:GetState()

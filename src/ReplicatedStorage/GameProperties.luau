@@ -1,0 +1,3 @@
+return {
+    MaxLootDistance = 10
+}

@@ -14,6 +14,7 @@ local ItemData = require(ReplicatedStorage.DataObjects.ItemData)
 local GetStaticData = require(ReplicatedStorage.Modules.GetStaticData)
 local StabilityAnchor = require(ReplicatedStorage.Modules.StabilityAnchor)
 local WeldBetween = require(ReplicatedStorage.Modules.WeldBetween)
+local CountTable = require(ReplicatedStorage.Modules.CountTable)
 
 -- Packages
 local FastCast = require(ReplicatedStorage.Packages.FastCast)
@@ -30,6 +31,7 @@ local EffectsSystem = require(ReplicatedStorage.Systems.EffectsSystem)
 -- Game Data
 local GameBulletData = require(ReplicatedStorage.GameBulletData)
 local GameMeleeData = require(ReplicatedStorage.GameMeleeData)
+local GameProperties = require(ReplicatedStorage.GameProperties)
 
 -- Variables
 local CurrentCamera = Workspace.CurrentCamera
@@ -195,10 +197,16 @@ do
         if itemData == nil then
             return
         end
+
+        if CountTable(InventorySystem:GetBestStacks(player, itemData.Name)) == 0 and InventorySystem:IsInventoryFull(player) == true then
+            return
+        end
         
-        -- TODO: pickup distance check
+        local character = player.Character
+        local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
+
         local physicalItem = Workspace.DroppedItems:FindFirstChild(itemData.ItemId)
-        if physicalItem then
+        if physicalItem and (humanoidRootPart.Position - physicalItem.PrimaryPart.Position).Magnitude <= GameProperties.MaxLootDistance then
             local trustedItemData = physicalItem:GetAttribute("ItemData")
             physicalItem:Destroy()
 

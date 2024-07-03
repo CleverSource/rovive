@@ -83,6 +83,7 @@ local function DisableInteractGui()
     InteractOverlay.CenterPoint.Visible = false
 end
 
+-- TODO: weird interaction gui
 task.spawn(function()
     RunService.RenderStepped:Connect(function()
         if PlayerStateController.IsAlive then

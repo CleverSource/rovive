@@ -196,6 +196,7 @@ do
             return
         end
         
+        -- TODO: pickup distance check
         local physicalItem = Workspace.DroppedItems:FindFirstChild(itemData.ItemId)
         if physicalItem then
             local trustedItemData = physicalItem:GetAttribute("ItemData")
@@ -348,6 +349,12 @@ do
 
         task.spawn(function()
             task.wait(2)
+            InventorySystem:AddNewItem(player, ItemData.new("Double Barrel"))
+            InventorySystem:AddNewItem(player, ItemData.new("Buckshot", 20))
+            InventorySystem:AddNewItem(player, ItemData.new("Buckshot", 20))
+            InventorySystem:AddNewItem(player, ItemData.new("Buckshot", 20))  
+            InventorySystem:AddNewItem(player, ItemData.new("Buckshot", 59))  
+            InventorySystem:AddNewItem(player, ItemData.new("Buckshot", 2))  
             EffectsSystem:MakeDroppedItem(InventorySystem:GetItemData(player, 1))
             EffectsSystem:MakeDroppedItem(InventorySystem:CreateItemData(ItemData.new("Double Barrel"), crate, nil))
             -- InventorySystem:EquipItem(player, 2)

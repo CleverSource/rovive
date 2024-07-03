@@ -9,6 +9,7 @@ local ItemData = require(DataObjects.ItemData)
 
 -- Modules
 local GetStaticData = require(ReplicatedStorage.Modules.GetStaticData)
+local CountTable = require(ReplicatedStorage.Modules.CountTable)
 
 -- Systems
 local EffectsSystem = require(ReplicatedStorage.Systems.EffectsSystem)
@@ -112,21 +113,29 @@ function InventorySystem:AddItem(inventoryObject: Instance, item: ItemData.ItemD
 
         local stackType = item.Name
         local bestStacks = self:GetBestStacks(inventoryObject, stackType)
+        local stackToAdd = item.Stack
+
         for _, stack in ipairs(bestStacks) do
+            if stackToAdd <= 0 then break end
+
             if stack.Data.Stack < stack.StaticData.MaxStack then
                 local remainder = stack.StaticData.MaxStack - stack.Data.Stack
                 if item.Stack <= remainder then
                     stack.Data.Stack = stack.Data.Stack + item.Stack
                     self:Update(stack)
+                    stackToAdd = 0
                 else
                     stack.Data.Stack = stack.StaticData.MaxStack
                     item.Stack = item.Stack - remainder
                     self:Update(stack)
+                    stackToAdd = item.Stack
                 end
             end
         end
 
-        self:AddNewItem(inventoryObject, item)
+        if stackToAdd > 0 then
+            self:AddNewItem(inventoryObject, item)
+        end
     end
 end
 
@@ -173,7 +182,7 @@ function InventorySystem:AddNewItem(inventoryObject: Instance, item: ItemData.It
         end
     end
 
-    if slot == nil then
+    if slot == nil and inventoryObject ~= nil then
         item.ItemId = HttpService:GenerateGUID(false)
         EffectsSystem:MakeDroppedItem(self:CreateItemData(item, inventoryObject, nil))
         return

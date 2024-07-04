@@ -63,7 +63,7 @@ end)
 
 -- Player input
 task.spawn(function()
-    task.wait(1)
+    task.wait(1) -- TODO: don't like this.
 
     -- Handle player input
     InputSystem:MapKeybinds()
@@ -79,13 +79,15 @@ task.spawn(function()
                 end
 
                 -- Picking up animation
-                local toolModel = DroppedItems:FindFirstChild(hoveredItemData.ItemId)
+                local toolModel: Instance = DroppedItems:FindFirstChild(hoveredItemData.ItemId)
                 if toolModel and toolModel.PrimaryPart then
-                    toolModel = toolModel:Clone()
-                    toolModel.Parent = Workspace.Debris
-                    Debris:AddItem(toolModel, 60)
+                    local toolModelClone = toolModel:Clone()
+                    local weld = toolModelClone:FindFirstChildWhichIsA("Weld", true)
+                    if weld then weld:Destroy() end
+                    toolModelClone.Parent = Workspace.Debris
+                    Debris:AddItem(toolModelClone, 15)
 
-                    for _, part in toolModel:GetChildren() do
+                    for _, part in toolModelClone:GetChildren() do
                         if part:IsA("BasePart") then
                             part.Anchored = true
                             part.CanCollide = false
@@ -99,7 +101,11 @@ task.spawn(function()
                 end
 
                 -- Request pickup on server
-                PickupItemRemote:SendToServer(hoveredItemData)
+                PickupItemRemote:CallServerAsync(hoveredItemData):andThen(function(success)
+                    if success then
+                        toolModel:Destroy()
+                    end                    
+                end)
             end
         end
     end)

@@ -193,13 +193,13 @@ do
     end)
 
     -- Pickup item
-    PickupItemRemote:Connect(function(player, itemData)
+    PickupItemRemote:SetCallback(function(player, itemData)
         if itemData == nil then
-            return
+            return false
         end
 
         if CountTable(InventorySystem:GetBestStacks(player, itemData.Name)) == 0 and InventorySystem:IsInventoryFull(player) == true then
-            return
+            return false
         end
         
         local character = player.Character
@@ -211,7 +211,11 @@ do
             physicalItem:Destroy()
 
             InventorySystem:AddItem(player, HttpService:JSONDecode(trustedItemData))
+        
+            return true
         end
+        
+        return false
     end)
 
     -- Drop item
@@ -360,9 +364,10 @@ do
             InventorySystem:AddNewItem(player, ItemData.new("Double Barrel"))
             InventorySystem:AddNewItem(player, ItemData.new("Buckshot", 20))
             InventorySystem:AddNewItem(player, ItemData.new("Buckshot", 20))
-            InventorySystem:AddNewItem(player, ItemData.new("Buckshot", 20))  
-            InventorySystem:AddNewItem(player, ItemData.new("Buckshot", 59))  
-            InventorySystem:AddNewItem(player, ItemData.new("Buckshot", 2))  
+            InventorySystem:AddNewItem(player, ItemData.new("Buckshot", 20))
+            InventorySystem:AddNewItem(player, ItemData.new("Buckshot", 59))
+            InventorySystem:AddNewItem(player, ItemData.new("Buckshot", 2))
+            InventorySystem:AddNewItem(player, ItemData.new("Sawblade Axe"))
             EffectsSystem:MakeDroppedItem(InventorySystem:GetItemData(player, 1))
             EffectsSystem:MakeDroppedItem(InventorySystem:CreateItemData(ItemData.new("Double Barrel"), crate, nil))
             -- InventorySystem:EquipItem(player, 2)

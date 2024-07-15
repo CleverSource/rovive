@@ -24,6 +24,7 @@ function PlayerStateController:AddCharacter(character: Instance)
     self.Humanoid = humanoid
     self.HumanoidRootPart = humanoidRootPart
     self.IsAlive = true
+    self.CurrentPosition = Vector2.new(humanoidRootPart.Position.X, humanoidRootPart.Position.Z)
     self.LastPosition = Vector2.new(humanoidRootPart.Position.X, humanoidRootPart.Position.Z)
 
     table.insert(self.Conns, humanoid.Died:Connect(function()
@@ -48,6 +49,12 @@ function PlayerStateController:CharacterIsNearWall()
 
     local ray = Workspace:Raycast(CurrentCamera.CFrame.Position, CurrentCamera.CFrame.LookVector * 6, raycastParams)
     return ray
+end
+
+function PlayerStateController:Update()
+    if not self.IsAlive then return end
+    self.LastPosition = self.CurrentPosition
+    self.CurrentPosition = Vector2.new(self.HumanoidRootPart.Position.X, self.HumanoidRootPart.Position.Z)
 end
 
 return PlayerStateController

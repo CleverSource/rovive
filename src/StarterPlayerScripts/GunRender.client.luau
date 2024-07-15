@@ -29,13 +29,12 @@ local function CalculateViewModelOffset()
     local angles = CFrame.Angles(0, 0, 0)
 
     local currentTick = tick()
-    local currentPosition = Vector2.new(PlayerStateController.HumanoidRootPart.Position.X, PlayerStateController.HumanoidRootPart.Position.Z)
 
     -- Is player moving based on frame grace period
     local playerMoving = false
     local moveCount = 0
 
-    local movementMagnitude = (currentPosition - PlayerStateController.LastPosition).Magnitude
+    local movementMagnitude = (PlayerStateController.CurrentPosition - PlayerStateController.LastPosition).Magnitude
     table.insert(MovementHistory, 1, movementMagnitude)
 
     if #MovementHistory > GRACE_PERIOD_FRAMES then
@@ -100,7 +99,6 @@ local function CalculateViewModelOffset()
 
     angles = angles * CFrame.Angles(math.rad(-changeY), math.rad(-changeX), 0)
 
-    PlayerStateController.LastPosition = currentPosition
     return (cframe * angles)
 end
 
@@ -140,6 +138,7 @@ do
 
         local originOffset = CalculateViewModelOffset()
 
+        PlayerStateController:Update()
         ToolSystem:UpdateOrigin(elapse)
 
         local itemData = InventorySystem:GetItemData(Players.LocalPlayer, InventorySystem:GetEquippedItemSlot(Players.LocalPlayer))

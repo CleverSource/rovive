@@ -132,7 +132,7 @@ function InputSystem:ForceStopActions(actions: table)
 end
 
 function InputSystem:GetImportantState()
-    local mostImportantState = "Sprint"--nil
+    local mostImportantState = nil
     for state, active in self.States do
         if active and table.find(ImportantStates, state) then
             local lastIndex = 1

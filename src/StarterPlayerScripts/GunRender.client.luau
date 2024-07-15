@@ -132,7 +132,6 @@ do
 end
 
 -- Handle gun animations
--- TODO: higher than 60 fps breaks this
 do
     RunService.RenderStepped:Connect(function(elapse)
         if not ToolSystem.Origin then return end

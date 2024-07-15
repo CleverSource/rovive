@@ -1,6 +1,7 @@
 -- Services
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
 local Workspace = game:GetService("Workspace")
 
 -- Variables
@@ -117,7 +118,7 @@ function ToolSystem:PlayAnimation(animationName: string, yield: boolean?)
             waiting = false
         end)
         while waiting and track do
-            task.wait()
+            RunService.RenderStepped:Wait()
         end
     end
 

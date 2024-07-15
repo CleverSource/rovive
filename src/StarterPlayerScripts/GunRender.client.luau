@@ -6,15 +6,22 @@ local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
 
 -- Player State
-local PlayerStateController = require(script.Parent.PlayerStateController)
+local PlayerStateController = require(script.Parent:WaitForChild("PlayerStateController"))
 
 -- Variables
 local Player = Players.LocalPlayer
+local MovementHistory = {}
+
+-- Constants
+local GRACE_PERIOD_FRAMES = 6
+local PLAYER_MAGNITUDE_THRESHOLD = 0.01
 
 -- Systems
+local Systems = ReplicatedStorage:WaitForChild("Systems")
+local InventorySystem = require(Systems.InventorySystem)
+
 local ToolSystem = require(script.Parent.Systems.ToolSystem)
 local InputSystem = require(script.Parent.Systems.InputSystem)
-local InventorySystem = require(ReplicatedStorage.Systems.InventorySystem)
 
 -- Functions
 local function CalculateViewModelOffset()
@@ -24,9 +31,29 @@ local function CalculateViewModelOffset()
     local currentTick = tick()
     local currentPosition = Vector2.new(PlayerStateController.HumanoidRootPart.Position.X, PlayerStateController.HumanoidRootPart.Position.Z)
 
-    local currentImportantState = InputSystem:GetImportantState()
+    -- Is player moving based on frame grace period
+    local playerMoving = false
+    local moveCount = 0
 
+    local movementMagnitude = (currentPosition - PlayerStateController.LastPosition).Magnitude
+    table.insert(MovementHistory, 1, movementMagnitude)
+
+    if #MovementHistory > GRACE_PERIOD_FRAMES then
+        table.remove(MovementHistory)
+    end
+
+    for _, magnitude in ipairs(MovementHistory) do
+        if magnitude > PLAYER_MAGNITUDE_THRESHOLD then
+            moveCount = moveCount + 1
+        end
+    end
+
+    if moveCount > GRACE_PERIOD_FRAMES / 2 then
+        playerMoving = true
+    end
+    
     -- Animation speed changes based on movement speed
+    local currentImportantState = InputSystem:GetImportantState()
     local currentAnimationSpeed = PlayerStateController.Humanoid.WalkSpeed < 20 and PlayerStateController.Humanoid.WalkSpeed or 20
     currentAnimationSpeed = currentAnimationSpeed / 1.5
 
@@ -35,7 +62,7 @@ local function CalculateViewModelOffset()
     end
 
     -- Walking sway
-    if (currentPosition - PlayerStateController.LastPosition).Magnitude > 0.01 then
+    if playerMoving then
         if currentImportantState == nil then
             cframe = cframe * CFrame.new(math.sin(currentTick * currentAnimationSpeed) / 14, math.sin(currentTick * (currentAnimationSpeed * 2)) / 10, 0)
         elseif currentImportantState == "Aim" then
@@ -107,15 +134,9 @@ end
 -- Handle gun animations
 -- TODO: higher than 60 fps breaks this
 do
-    local lastLerpTime = tick()
-
-    RunService.RenderStepped:Connect(function()
+    RunService.RenderStepped:Connect(function(elapse)
         if not ToolSystem.Origin then return end
         if not PlayerStateController.IsAlive then return end
-
-        local currentTime = tick()
-        local elapse = currentTime - lastLerpTime
-        lastLerpTime = currentTime
 
         local originOffset = CalculateViewModelOffset()
 
@@ -126,7 +147,7 @@ do
 
         -- Gun shooting
         if ToolSystem:IsReadyToFire() then 
-            if  (ToolSystem:GetWeaponType() == "Gun" and not PlayerStateController:CharacterIsNearWall()) or ToolSystem:GetWeaponType() == "Melee" then
+            if (ToolSystem:GetWeaponType() == "Gun" and not PlayerStateController:CharacterIsNearWall()) or ToolSystem:GetWeaponType() == "Melee" then
                 ToolSystem:Fire()
             else
                 InputSystem:ForceStopAction("Fire")
@@ -148,7 +169,7 @@ do
         end
 
         ToolSystem:SetOffset(originOffset)
-        ToolSystem.SpringX:Update()
         ToolSystem.SpringY:Update()
+        ToolSystem.SpringX:Update()
     end)
 end

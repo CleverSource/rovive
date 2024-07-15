@@ -351,16 +351,16 @@ do
         InventorySystem:InitializeInventory(inventoryData)
 
         -- TODO: Testing
-        for i = 1, inventoryData.InventorySlots do
-            InventorySystem:AddNewItem(player, ItemData.new("Wood", 999))
-        end
+        -- for i = 1, inventoryData.InventorySlots do
+        --     InventorySystem:AddNewItem(player, ItemData.new("Wood", 999))
+        -- end
 
         local crate = workspace.TestCrate
         InventorySystem:InitializeInventory(InventoryData.new(crate, 10))
         InventorySystem:AddNewItem(crate, ItemData.new("Double Barrel"), 2)
 
         task.spawn(function()
-            task.wait(2)
+            task.wait(4)
             InventorySystem:AddNewItem(player, ItemData.new("Double Barrel"))
             InventorySystem:AddNewItem(player, ItemData.new("Buckshot", 20))
             InventorySystem:AddNewItem(player, ItemData.new("Buckshot", 20))
@@ -368,8 +368,11 @@ do
             InventorySystem:AddNewItem(player, ItemData.new("Buckshot", 59))
             InventorySystem:AddNewItem(player, ItemData.new("Buckshot", 2))
             InventorySystem:AddNewItem(player, ItemData.new("Sawblade Axe"))
-            EffectsSystem:MakeDroppedItem(InventorySystem:GetItemData(player, 1))
-            EffectsSystem:MakeDroppedItem(InventorySystem:CreateItemData(ItemData.new("Double Barrel"), crate, nil))
+            
+            task.wait(1)
+            InventorySystem:EquipItem(player, 36)
+            -- EffectsSystem:MakeDroppedItem(InventorySystem:GetItemData(player, 1))
+            -- EffectsSystem:MakeDroppedItem(InventorySystem:CreateItemData(ItemData.new("Double Barrel"), crate, nil))
             -- InventorySystem:EquipItem(player, 2)
         end)
     end

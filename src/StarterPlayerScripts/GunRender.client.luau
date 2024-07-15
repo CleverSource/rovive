@@ -13,7 +13,7 @@ local Player = Players.LocalPlayer
 local MovementHistory = {}
 
 -- Constants
-local GRACE_PERIOD_FRAMES = 6
+local GRACE_PERIOD_FRAMES = 14
 local PLAYER_MAGNITUDE_THRESHOLD = 0.01
 
 -- Systems
@@ -51,7 +51,7 @@ local function CalculateViewModelOffset()
     if moveCount > GRACE_PERIOD_FRAMES / 2 then
         playerMoving = true
     end
-    
+
     -- Animation speed changes based on movement speed
     local currentImportantState = InputSystem:GetImportantState()
     local currentAnimationSpeed = PlayerStateController.Humanoid.WalkSpeed < 20 and PlayerStateController.Humanoid.WalkSpeed or 20
@@ -63,6 +63,7 @@ local function CalculateViewModelOffset()
 
     -- Walking sway
     if playerMoving then
+    -- if UserInputService:IsKeyDown(Enum.KeyCode.W) or UserInputService:IsKeyDown(Enum.KeyCode.D) or UserInputService:IsKeyDown(Enum.KeyCode.S) or UserInputService:IsKeyDown(Enum.KeyCode.A) then
         if currentImportantState == nil then
             cframe = cframe * CFrame.new(math.sin(currentTick * currentAnimationSpeed) / 14, math.sin(currentTick * (currentAnimationSpeed * 2)) / 10, 0)
         elseif currentImportantState == "Aim" then

@@ -42,6 +42,10 @@ local Devs = {
     ["472765608"] = true -- baydocks
 }
 
+if Devs[tostring(Players.LocalPlayer.UserId)] == nil then
+    return
+end
+
 UserInputService.InputBegan:Connect(function(input, gameProcessedEvent)
     if gameProcessedEvent then return end
     if input.KeyCode == openKeybind and Devs[tostring(Players.LocalPlayer.UserId)] then
@@ -51,7 +55,7 @@ end)
 
 task.spawn(function()
     task.wait()
-    if PlayerGui:FindFirstChild(DebugHud.Name) == nil then
+    if PlayerGui:FindFirstChild(DebugHud.Name) == nil and Devs[tostring(Players.LocalPlayer.UserId)] then
         local debugHudClone = DebugHud:Clone()
         debugHudClone.Parent = PlayerGui
         debugHudRef:set(debugHudClone)

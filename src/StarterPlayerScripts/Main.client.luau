@@ -27,7 +27,7 @@ local BulletSystem = require(RepSystems.BulletSystem)
 local InventorySystem = require(RepSystems.InventorySystem)
 
 -- Player State
-local PlayerStateController = require(script.Parent.PlayerStateController)
+local PlayerStateController = require(script.Parent.Modules.PlayerStateController)
 
 -- Variables
 local CurrentCamera = Workspace.CurrentCamera
@@ -128,6 +128,8 @@ end
 -- TODO: change this to have different if-else structure
 task.spawn(function()
     RunService.RenderStepped:Connect(function()
+        PlayerStateController:Update()
+
         if PlayerStateController.IsAlive then
             local ray = Ray.new(CurrentCamera.CFrame.Position, CurrentCamera.CFrame.LookVector * GameProperties.MaxLootDistance)
             local isPlayerSwimming = PlayerStateController.HumanoidState == Enum.HumanoidStateType.Swimming

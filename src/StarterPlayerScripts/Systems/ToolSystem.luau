@@ -22,7 +22,7 @@ local ShootingEffects = Assets.ShootingEffects
 local GetStaticDataModule = require(ReplicatedStorage.Modules.GetStaticData)
 
 -- Player State
-local PlayerStateController = require(script.Parent.Parent.PlayerStateController)
+local PlayerStateController = require(script.Parent.Parent.Modules.PlayerStateController)
 
 -- Systems
 local InputSystem = require(script.Parent.InputSystem)

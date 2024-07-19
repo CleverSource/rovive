@@ -177,6 +177,7 @@ function InventorySystem:AddNewItem(inventoryObject: Instance, item: ItemData.It
         for i = 1, inventoryData.Data.InventorySlots do
             if inventoryData.RawData[i].Name == nil then
                 slot = i
+                break
             end
         end
     end

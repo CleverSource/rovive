@@ -54,6 +54,9 @@ local print = require(ReplicatedStorage.Debug.Print)
 -- Store
 local Store = require(ReplicatedStorage.Store).new()
 
+-- Trove
+local Trove = require(ReplicatedStorage.Packages.Trove).new()
+
 -- Server hit detection
 local MAX_RAYCAST_DISTANCE_TOLERANCE = 10 -- Calculated avg. distance a gun can shoot with an SEM of 2. This is legit.
 local ServerCaster = FastCast.new()
@@ -65,6 +68,7 @@ local function OnRayHit(cast, result: RaycastResult, _, bullet)
     local weaponData = userData.Weapon.StaticData
 
     if instance then
+        -- TODO: proper hit handling
         -- Deal damage to players
         local hitHumanoid: Humanoid = instance.Parent:FindFirstChildOfClass("Humanoid")
         if hitHumanoid then
@@ -74,7 +78,6 @@ local function OnRayHit(cast, result: RaycastResult, _, bullet)
         -- Create thrown tool object on ground
         local tool = Tools:FindFirstChild(userData.Weapon.Name)
         if weaponData.WeaponType == "Melee" and tool and bullet then
-            local conns = {}
             local toolModel = tool:Clone()
             local toolObj = toolModel.PrimaryPart
             Debris:AddItem(toolModel, 300)
@@ -95,20 +98,20 @@ local function OnRayHit(cast, result: RaycastResult, _, bullet)
             toolModel:SetAttribute("ItemData", HttpService:JSONEncode(userData.Weapon.Data))
 
             if hitHumanoid then
-                table.insert(conns, hitHumanoid.Died:Connect(function()
+                Trove:Connect(hitHumanoid.Died, function()
                     toolObj.CanCollide = true
                     toolObj.Anchored = false
                     StabilityAnchor(toolObj)
-                    for _, conn in conns do conn:Disconnect() end
-                end))
+                    Trove:Clean()
+                end)
             end
 
-            table.insert(conns, instance:GetPropertyChangedSignal("Parent"):Connect(function()
+            Trove:Connect(toolObj:GetPropertyChangedSignal("Parent"), function()
                 toolObj.CanCollide = true
                 toolObj.Anchored = false
                 StabilityAnchor(toolObj)
-                for _, conn in conns do conn:Disconnect() end
-            end))
+                Trove:Clean()
+            end)
         end
     end
 end
@@ -157,6 +160,7 @@ ServerCaster.LengthChanged:Connect(function(cast, lastPoint, direction, length, 
 end)
 ServerCaster.CastTerminating:Connect(function(cast)
     local rayInfo = cast.RayInfo
+
     if rayInfo and rayInfo.CosmeticBulletObject then
         local bullet = rayInfo.CosmeticBulletObject
 

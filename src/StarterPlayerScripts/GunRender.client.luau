@@ -6,13 +6,14 @@ local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
 
 -- Player State
-local PlayerStateController = require(script.Parent:WaitForChild("PlayerStateController"))
+local PlayerStateController = require(script.Parent.Modules:WaitForChild("PlayerStateController"))
 
 -- Variables
 local Player = Players.LocalPlayer
 local MovementHistory = {}
 
 -- Constants
+-- TODO: grace period should be dynamic.. somehow
 local GRACE_PERIOD_FRAMES = 14
 local PLAYER_MAGNITUDE_THRESHOLD = 0.01
 
@@ -138,7 +139,6 @@ do
 
         local originOffset = CalculateViewModelOffset()
 
-        PlayerStateController:Update()
         ToolSystem:UpdateOrigin(elapse)
 
         local itemData = InventorySystem:GetItemData(Players.LocalPlayer, InventorySystem:GetEquippedItemSlot(Players.LocalPlayer))

@@ -1,4 +1,8 @@
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Workspace = game:GetService("Workspace")
+
+local Trove = require(ReplicatedStorage.Packages.Trove)
+
 local CurrentCamera = Workspace.CurrentCamera
 
 local PlayerStateController = {
@@ -9,7 +13,7 @@ local PlayerStateController = {
     HumanoidState = nil,
     LastPosition = Vector2.new(),
     HoveredItem = nil,
-    Conns = {}
+    Trove = nil
 }
 
 function PlayerStateController:AddCharacter(character: Instance)
@@ -26,19 +30,20 @@ function PlayerStateController:AddCharacter(character: Instance)
     self.IsAlive = true
     self.CurrentPosition = Vector2.new(humanoidRootPart.Position.X, humanoidRootPart.Position.Z)
     self.LastPosition = Vector2.new(humanoidRootPart.Position.X, humanoidRootPart.Position.Z)
-
-    table.insert(self.Conns, humanoid.Died:Connect(function()
+    self.Trove = Trove.new()
+    
+    self.Trove:Connect(humanoid.Died, function()
         self.Character = nil
         self.Humanoid = nil
         self.HumanoidRootPart = nil
         self.IsAlive = false
         self.LastPosition = nil
-        for _, conn in self.Conns do conn:Disconnect() end
-    end))
+        self.Trove:Clean()
+    end)
 
-    table.insert(self.Conns, humanoid.StateChanged:Connect(function(_, new)
+    self.Trove:Connect(humanoid.StateChanged, function(_, new)
         self.HumanoidState = new
-    end))
+    end)
 end
 
 function PlayerStateController:CharacterIsNearWall()

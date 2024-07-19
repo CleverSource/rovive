@@ -1,3 +1,6 @@
+-- NOTE: when using this hook, the inner component will only update when the client and server data are out of sync for the specific inventory
+-- this means that the component will only update when the inventory data changes
+
 -- React
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -17,6 +20,7 @@ return function(innerComponent)
 
     function connection:init(props)
         self.store = props.store
+        self.lastUpdate = tick()
 
         if self.store == nil then
             error("Cannot initialize useStore connection without being a descendent of StoreProvider!")
@@ -25,10 +29,16 @@ return function(innerComponent)
         local function updateState(state)
             local storeState = state
             local localDataKey = InventorySystem:GetDataKey(Players.LocalPlayer)
+            local data = storeState.GlobalInventory[localDataKey]
             
-            self:setState({
-                data = storeState.GlobalInventory[localDataKey]
-            })
+            -- Only update when the client and server data are out of sync for the specific inventory
+            if self.lastUpdate ~= data.Data.LastUpdate then
+                self:setState({
+                    data = storeState.GlobalInventory[localDataKey]
+                })
+            end
+
+            self.lastUpdate = data.Data.LastUpdate
         end
 
         updateState(self.store:GetState())

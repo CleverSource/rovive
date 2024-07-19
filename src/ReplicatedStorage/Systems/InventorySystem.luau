@@ -189,6 +189,7 @@ function InventorySystem:AddNewItem(inventoryObject: Instance, item: ItemData.It
     end
 
     if inventoryData then
+        inventoryData.Data.LastUpdate = tick()
         inventoryData.RawData[slot] = item
         Store:SetState(state)
     else
@@ -246,6 +247,7 @@ function InventorySystem:Update(itemData: FetchedItemData)
     local item = inventoryData.RawData[slot]
 
     if item then
+        inventoryData.Data.LastUpdate = tick()
         inventoryData.RawData[slot] = itemData.Data
         Store:SetState(state)
     end

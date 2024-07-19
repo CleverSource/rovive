@@ -4,7 +4,8 @@ InventoryData.__index = InventoryData
 
 export type InventoryData = {
     InventoryObject: Instance,
-    InventorySlots: number
+    InventorySlots: number,
+    LastUpdate: number
 }
 
 function InventoryData.new(inventoryObject: Instance, inventorySlots: number)
@@ -12,6 +13,7 @@ function InventoryData.new(inventoryObject: Instance, inventorySlots: number)
 
     inventory.InventoryObject = inventoryObject
     inventory.InventorySlots = inventorySlots
+    inventory.LastUpdate = tick()
 
     return inventory
 end

@@ -9,26 +9,36 @@ local ReactRoblox = require(ReplicatedStorage.Packages.ReactRoblox)
 -- Components
 local Components = script.Parent:WaitForChild("Components")
 local InventoryHolder = require(Components.InventoryHolder)
+local StoreContextProvider = require(Components.StoreContextProvider)
 
+-- Store
+local Store = require(ReplicatedStorage.Store)
+
+-- Root
 local handle = Instance.new("ScreenGui", Players.LocalPlayer.PlayerGui)
 local root = ReactRoblox.createRoot(handle)
+
 root:render(React.createElement("Frame", {
     BackgroundTransparency = 1,
     Size = UDim2.new(1, 0, 1, 0)
 }, {
-    Inventory = React.createElement("Frame", {
-        AnchorPoint = Vector2.new(0.5, 0.5),
-        BackgroundTransparency = 1,
-        Position = UDim2.new(0.5, 0, 0.5, 0),
-        Size = UDim2.new(1, 0, 1, 0),
+    InventoryProvider = React.createElement(StoreContextProvider, {
+        store = Store
     }, {
-        YourInventory = React.createElement("Frame", {
-            AnchorPoint = Vector2.new(0.5, 1),
+        Inventory = React.createElement("Frame", {
+            AnchorPoint = Vector2.new(0.5, 0.5),
             BackgroundTransparency = 1,
-            Position = UDim2.new(0.5, 0, 0.9, -8),
-            Size = UDim2.new(1, 0, 0.34, 0)
+            Position = UDim2.new(0.5, 0, 0.5, 0),
+            Size = UDim2.new(1, 0, 1, 0),
         }, {
-            InventoryHolder = React.createElement(InventoryHolder)
+            YourInventory = React.createElement("Frame", {
+                AnchorPoint = Vector2.new(0.5, 1),
+                BackgroundTransparency = 1,
+                Position = UDim2.new(0.5, 0, 0.9, -8),
+                Size = UDim2.new(1, 0, 0.34, 0)
+            }, {
+                InventoryHolder = React.createElement(InventoryHolder)
+            })
         })
-    })
+    }),
 }))

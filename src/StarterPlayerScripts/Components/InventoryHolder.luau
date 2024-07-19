@@ -2,12 +2,19 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local React = require(ReplicatedStorage.Packages.React)
 
+-- Hooks
+local Hooks = script.Parent.Parent:WaitForChild("Hooks")
+local useStore = require(Hooks.useStore)
+
 -- InventoryHolder
 -- TODO
 local RESERVED_INVENTORY_SLOTS = 24
 local SLOTS_PER_ROW = 6
 
 local function InventoryHolder(props)
+    local inventoryData = props.data
+    print(inventoryData)
+
     local inventoryRows = React.useMemo(function()
         local rows = {}
         
@@ -32,7 +39,7 @@ local function InventoryHolder(props)
         end
 
         return rows
-    end, {  })
+    end, { inventoryData })
 
     return React.createElement("Frame", {
         BackgroundTransparency = 1,
@@ -43,10 +50,10 @@ local function InventoryHolder(props)
             FillDirection = Enum.FillDirection.Vertical,
             HorizontalAlignment = Enum.HorizontalAlignment.Center,
             SortOrder = Enum.SortOrder.Name,
-            VerticalAlignment = Enum.VerticalAlignment.Bottom,
+            VerticalAlignment = Enum.VerticalAlignment.Bottom, 
         }),
         table.unpack(inventoryRows)
     })
 end
 
-return InventoryHolder
+return useStore(InventoryHolder)

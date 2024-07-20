@@ -371,13 +371,13 @@ do
 
         task.spawn(function()
             task.wait(4)
-            InventorySystem:AddNewItem(player, ItemData.new("Double Barrel"))
+            InventorySystem:AddNewItem(player, ItemData.new("Double Barrel"), 25)
             InventorySystem:AddNewItem(player, ItemData.new("Buckshot", 20))
             InventorySystem:AddNewItem(player, ItemData.new("Buckshot", 20))
             InventorySystem:AddNewItem(player, ItemData.new("Buckshot", 20))
             InventorySystem:AddNewItem(player, ItemData.new("Buckshot", 59))
             InventorySystem:AddNewItem(player, ItemData.new("Buckshot", 2))
-            InventorySystem:AddNewItem(player, ItemData.new("Sawblade Axe"))
+            InventorySystem:AddNewItem(player, ItemData.new("Sawblade Axe"), 26)
             
             task.wait(1)
             InventorySystem:EquipItem(player, 36)

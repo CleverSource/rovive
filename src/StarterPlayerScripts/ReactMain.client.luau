@@ -10,6 +10,7 @@ local ReactRoblox = require(ReplicatedStorage.Packages.ReactRoblox)
 local Components = script.Parent:WaitForChild("Components")
 local InventoryHolder = require(Components.InventoryHolder)
 local StoreContextProvider = require(Components.StoreContextProvider)
+local Hotbar = require(Components.Hotbar)
 
 -- Store
 local Store = require(ReplicatedStorage.Store)
@@ -39,6 +40,8 @@ root:render(React.createElement("Frame", {
             }, {
                 InventoryHolder = React.createElement(InventoryHolder)
             })
-        })
+        }),
+
+        Hotbar = React.createElement(Hotbar)
     }),
 }))

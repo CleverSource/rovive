@@ -67,7 +67,9 @@ task.spawn(function()
                 if activeItem ~= nil then
                     local gunNameLabel = debugHudClone.Weapon.NameLabel
                     local ammoLabel = debugHudClone.Weapon.AmmoLabel
+                    local icon = debugHudClone.Weapon.GunIcon
                     local staticData = GetStaticData(activeItem.Name)
+                    icon.Image = staticData.Icon
                     gunNameLabel.Text = activeItem and ToolSystem.CurrentItem.Name or "nil"
 
                     if staticData and staticData.MaxAmmo then

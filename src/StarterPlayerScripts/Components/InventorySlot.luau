@@ -27,7 +27,7 @@ local function InventorySlot(props)
         Size = UDim2.new(1, 0, 1, 0),
         SizeConstraint = Enum.SizeConstraint.RelativeYY,
         Image = Icons.InventorySlot,
-        ImageColor3 = Color3.fromRGB(99, 99, 99),
+        ImageColor3 = props.color or Color3.fromRGB(99, 99, 99),
         ImageTransparency = 0.3,
         ScaleType = Enum.ScaleType.Slice,
         SliceCenter = Rect.new(10, 10, 90, 90),
@@ -64,7 +64,7 @@ local function InventorySlot(props)
             Position = UDim2.new(-0.075, -5, 0, -2),
             Size = UDim2.new(1, 0, 1, 0),
             ZIndex = 4,
-            FontFace = Font.new(Enum.Font.Arimo.Name, Enum.FontWeight.Bold, Enum.FontStyle.Normal),
+            FontFace = Font.fromName(Enum.Font.Arimo.Name, Enum.FontWeight.Bold, Enum.FontStyle.Normal),
             Text = tostring(item.Ammo),
             TextColor3 = Color3.new(1, 1, 1),
             TextSize = 16,
@@ -73,7 +73,8 @@ local function InventorySlot(props)
             TextWrapped = true,
             TextXAlignment = Enum.TextXAlignment.Right,
             TextYAlignment = Enum.TextYAlignment.Bottom
-        })
+        }),
+        table.unpack(React.Children.toArray(props.children))
     })
 end
 

@@ -363,11 +363,11 @@ do
         InventorySystem:InitializeInventory(InventoryData.new(crate, 10))
         InventorySystem:AddNewItem(crate, ItemData.new("Double Barrel"), 2)
 
-        task.spawn(function()
-            while task.wait(1) do
-                InventorySystem:AddNewItem(crate, ItemData.new("Double Barrel"))
-            end
-        end)
+        -- task.spawn(function()
+        --     while task.wait(1) do
+        --         InventorySystem:AddNewItem(crate, ItemData.new("Double Barrel"))
+        --     end
+        -- end)
 
         task.spawn(function()
             task.wait(4)

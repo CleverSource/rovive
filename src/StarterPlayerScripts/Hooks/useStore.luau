@@ -34,7 +34,7 @@ return function(innerComponent)
             -- Only update when the client and server data are out of sync for the specific inventory
             if self.lastUpdate ~= data.Data.LastUpdate then
                 self:setState({
-                    data = storeState.GlobalInventory[localDataKey]
+                    storeData = data
                 })
             end
 

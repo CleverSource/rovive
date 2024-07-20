@@ -9,6 +9,7 @@
 
     ItemData:
         MaxStack: number (default: 1) -> The maximum amount of items that can be stacked in a single slot
+        Icon: string or number -> The icon of the item, links to an in-game icon
 
         Weapon data properties:
         Equipable: boolean (default: false) -> Whether or not the item can be equipped
@@ -54,10 +55,13 @@ export type StaticData = {
 -- The single source of truth for item data in the game.
 local ItemData = {
     ["Wood"] = {
+        Icon = 18568899548,
         MaxStack = 1000
     },
 
     ["Sawblade Axe"] = {
+        Icon = 18568881613,
+
         Equipable = true,
         WeaponType = "Melee",
 
@@ -72,6 +76,8 @@ local ItemData = {
     },
 
     ["Double Barrel"] = {
+        Icon = 18568905098,
+
         Equipable = true,
         WeaponType = "Gun",
         MaxAmmo = 2,
@@ -90,6 +96,7 @@ local ItemData = {
     },
 
     ["Buckshot"] = {
+        Icon = 18568910433,
         MaxStack = 60
     }
 }
@@ -103,6 +110,10 @@ for itemName, itemData in ItemData do
 
     if itemData.Equipable == nil then
         itemData.Equipable = false
+    end
+    
+    if itemData.Icon then
+        itemData.Icon = "rbxassetid://" .. itemData.Icon
     end
 end
 

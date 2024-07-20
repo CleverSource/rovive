@@ -22,7 +22,7 @@ root:render(React.createElement("Frame", {
     BackgroundTransparency = 1,
     Size = UDim2.new(1, 0, 1, 0)
 }, {
-    InventoryProvider = React.createElement(StoreContextProvider, {
+    StoreProvider = React.createElement(StoreContextProvider, {
         store = Store
     }, {
         Inventory = React.createElement("Frame", {

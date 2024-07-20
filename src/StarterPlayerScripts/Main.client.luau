@@ -103,6 +103,7 @@ task.spawn(function()
                     return
                 end
 
+                -- TODO: animation can occur when the item pickup is declined on the server
                 -- Picking up animation
                 local toolModel: Instance = DroppedItems:FindFirstChild(hoveredItemData.ItemId)
                 if toolModel and toolModel.PrimaryPart then

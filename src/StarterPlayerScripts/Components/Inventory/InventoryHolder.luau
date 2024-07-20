@@ -3,7 +3,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local React = require(ReplicatedStorage.Packages.React)
 
 -- Hooks
-local Hooks = script.Parent.Parent:WaitForChild("Hooks")
+local Hooks = script.Parent.Parent.Parent:WaitForChild("Hooks")
 local useStore = require(Hooks.useStore)
 
 -- Components

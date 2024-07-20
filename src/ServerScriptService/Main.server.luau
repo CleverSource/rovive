@@ -358,6 +358,7 @@ do
         local inventoryData = InventoryData.new(player, 36)
         InventorySystem:InitializeInventory(inventoryData)
 
+        -- TESTING TESTING TESTING TESTING TESTING TESTING TESTING TESTING TESTING TESTING TESTING TESTING TESTING TESTING TESTING TESTING TESTING TESTING TESTING TESTING TESTING TESTING TESTING TESTING 
         -- TODO: Testing
         -- for i = 1, inventoryData.InventorySlots do
         --     InventorySystem:AddNewItem(player, ItemData.new("Wood", 999))
@@ -390,6 +391,7 @@ do
             -- EffectsSystem:MakeDroppedItem(InventorySystem:CreateItemData(ItemData.new("Double Barrel"), crate, nil))
             -- InventorySystem:EquipItem(player, 2)
         end)
+        -- TESTING TESTING TESTING TESTING TESTING TESTING TESTING TESTING TESTING TESTING TESTING TESTING TESTING TESTING TESTING TESTING TESTING TESTING TESTING TESTING TESTING TESTING TESTING TESTING 
     end
 
     for _, player in Players:GetPlayers() do 

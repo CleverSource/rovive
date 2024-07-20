@@ -8,9 +8,9 @@ local ReactRoblox = require(ReplicatedStorage.Packages.ReactRoblox)
 
 -- Components
 local Components = script.Parent:WaitForChild("Components")
-local InventoryHolder = require(Components.InventoryHolder)
-local StoreContextProvider = require(Components.StoreContextProvider)
-local Hotbar = require(Components.Hotbar)
+local InventoryHolder = require(Components.Inventory.InventoryHolder)
+local StoreContextProvider = require(Components.Store.StoreContextProvider)
+local Hotbar = require(Components.Inventory.Hotbar)
 
 -- Store
 local Store = require(ReplicatedStorage.Store)

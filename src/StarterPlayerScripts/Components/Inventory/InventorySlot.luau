@@ -7,9 +7,9 @@ local CountTable = require(ReplicatedStorage.Modules.CountTable)
 local GetStaticData = require(ReplicatedStorage.Modules.GetStaticData)
 
 -- Components
-local Components = script.Parent
-local InventoryIcon = require(Components.InventoryIcon)
-local DirtOverlay = require(Components.DirtOverlay)
+local Components = script.Parent.Parent
+local InventoryIcon = require(Components.Inventory.InventoryIcon)
+local DirtOverlay = require(Components.Generic.DirtOverlay)
 
 -- Icons
 local Icons = require(ReplicatedStorage.GameIcons)

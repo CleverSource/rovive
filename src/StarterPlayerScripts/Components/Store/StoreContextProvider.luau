@@ -3,8 +3,8 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local React = require(ReplicatedStorage.Packages.React)
 
 -- Components
-local Components = script.Parent
-local StoreContext = require(Components.StoreContext)
+local Components = script.Parent.Parent
+local StoreContext = require(Components.Store.StoreContext)
 
 -- StoreContextProvider
 local StoreContextProvider = React.Component:extend("StoreContextProvider")

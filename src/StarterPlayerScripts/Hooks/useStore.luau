@@ -8,7 +8,7 @@ local React = require(ReplicatedStorage.Packages.React)
 
 -- Components
 local Components = script.Parent.Parent:WaitForChild("Components")
-local StoreContext = require(Components.StoreContext)
+local StoreContext = require(Components.Store.StoreContext)
 
 -- Systems
 local Systems = ReplicatedStorage.Systems

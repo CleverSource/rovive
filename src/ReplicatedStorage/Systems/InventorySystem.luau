@@ -56,11 +56,7 @@ end
 
 function InventorySystem:EquipItem(inventoryObject: Instance, slot: number)
     if inventoryObject:IsA("Player") then
-        local state = Store:GetState()
-        local inventory = state.GlobalInventory
-    
-        local storeKey = self:GetDataKey(inventoryObject)
-        local inventoryData = inventory[storeKey]
+        local state, inventoryData = self:GetStateAndInventoryData(inventoryObject)
 
         if slot and slot > inventoryData.Data.InventorySlots then
             warn("InventorySystem: Attempted to equip item from slot that does not exist.")
@@ -80,11 +76,7 @@ end
 
 function InventorySystem:UnequipItem(inventoryObject: Instance)
     if inventoryObject:IsA("Player") then
-        local state = Store:GetState()
-        local inventory = state.GlobalInventory
-    
-        local storeKey = self:GetDataKey(inventoryObject)
-        local inventoryData = inventory[storeKey]
+        local state, inventoryData = self:GetStateAndInventoryData(inventoryObject)
 
         inventoryData.Data.EquippedSlot = nil
         inventoryObject:SetAttribute("EquippedSlot", nil)
@@ -110,11 +102,7 @@ end
 
 -- TODO: hella testing
 function InventorySystem:AddItem(inventoryObject: Instance, item: ItemData.ItemData)
-    local state = Store:GetState()
-    local inventory = state.GlobalInventory
-
-    local storeKey = self:GetDataKey(inventoryObject)
-    local inventoryData = inventory[storeKey]
+    local _, inventoryData = self:GetStateAndInventoryData(inventoryObject)
 
     if inventoryData then
         -- Check if other items in inventory of same name
@@ -171,11 +159,7 @@ end
 -- end
 
 function InventorySystem:AddNewItem(inventoryObject: Instance, item: ItemData.ItemData, slot: number?)
-    local state = Store:GetState()
-    local inventory = state.GlobalInventory
-
-    local storeKey = self:GetDataKey(inventoryObject)
-    local inventoryData = inventory[storeKey]
+    local state, inventoryData = self:GetStateAndInventoryData(inventoryObject)
 
     if GetStaticData(item.Name) == nil then
         warn("InventorySystem: Attempted to add item that does not exist in GameItemData.")
@@ -234,11 +218,7 @@ function InventorySystem:CreateItemData(item: ItemData.ItemData, inventoryObject
 end
 
 function InventorySystem:GetItemData(inventoryObject: Instance, slot: number): () -> FetchedItemData
-    local state = Store:GetState()
-    local inventory = state.GlobalInventory
-
-    local storeKey = self:GetDataKey(inventoryObject)
-    local inventoryData = inventory[storeKey]
+    local _, inventoryData = self:GetStateAndInventoryData(inventoryObject)
 
     local item = inventoryData.RawData[slot]
     if item and item.Name ~= nil then
@@ -252,11 +232,7 @@ function InventorySystem:Update(itemData: FetchedItemData)
     local inventoryObj = itemData.InventoryObj
     local slot = itemData.Slot
     
-    local state = Store:GetState()
-    local inventory = state.GlobalInventory
-
-    local storeKey = self:GetDataKey(inventoryObj)
-    local inventoryData = inventory[storeKey]
+    local state, inventoryData = self:GetStateAndInventoryData(inventoryObj)
     local item = inventoryData.RawData[slot]
 
     if item then
@@ -268,6 +244,14 @@ end
 function InventorySystem:UpdateInventoryState(state, inventoryData)
     inventoryData.Data.LastUpdate = tick()
     Store:SetState(state)
+end
+
+function InventorySystem:GetStateAndInventoryData(inventoryObject: Instance)
+    local state = Store:GetState()
+    local inventory = state.GlobalInventory
+
+    local storeKey = self:GetDataKey(inventoryObject)
+    return state, inventory[storeKey]
 end
 
 return InventorySystem

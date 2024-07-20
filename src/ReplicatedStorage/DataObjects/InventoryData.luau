@@ -13,6 +13,7 @@ function InventoryData.new(inventoryObject: Instance, inventorySlots: number)
 
     inventory.InventoryObject = inventoryObject
     inventory.InventorySlots = inventorySlots
+    inventory.EquippedSlot = nil
     inventory.LastUpdate = tick()
 
     return inventory

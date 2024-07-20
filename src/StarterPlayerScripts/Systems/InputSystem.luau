@@ -85,7 +85,7 @@ function InputSystem:MapKeybinds()
                 end
 
                 self.States[keybind] = true
-                _onStateChanged:Fire(keybind, true)
+                _onStateChanged:Fire(keybind, true, input)
             end
         end
     end)
@@ -96,7 +96,7 @@ function InputSystem:MapKeybinds()
             if keybind then
                 if not table.find(ManualStates, keybind) then
                     self.States[keybind] = false
-                    _onStateChanged:Fire(keybind, false)
+                    _onStateChanged:Fire(keybind, false, input)
                 end
             end
         end
@@ -116,7 +116,7 @@ end
 
 function InputSystem:ForceStopAction(state: string)
     self.States[state] = false
-    _onStateChanged:Fire(state, false)
+    _onStateChanged:Fire(state, false, nil)
 
     if BlockedStates[state] then
         for _, blockedState in BlockedStates[state] do

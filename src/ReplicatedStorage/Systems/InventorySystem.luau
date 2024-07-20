@@ -56,7 +56,11 @@ end
 
 function InventorySystem:EquipItem(inventoryObject: Instance, slot: number)
     if inventoryObject:IsA("Player") then
-        local inventoryData = self:GetInventoryFromObject(inventoryObject)
+        local state = Store:GetState()
+        local inventory = state.GlobalInventory
+    
+        local storeKey = self:GetDataKey(inventoryObject)
+        local inventoryData = inventory[storeKey]
 
         if slot and slot > inventoryData.Data.InventorySlots then
             warn("InventorySystem: Attempted to equip item from slot that does not exist.")
@@ -66,7 +70,9 @@ function InventorySystem:EquipItem(inventoryObject: Instance, slot: number)
         if inventoryData then
             local item = self:GetItemData(inventoryObject, slot)
             if item and item.StaticData.Equipable then
+                inventoryData.Data.EquippedSlot = slot
                 inventoryObject:SetAttribute("EquippedSlot", slot)
+                self:UpdateInventoryState(state, inventoryData)
             end
         end
     end
@@ -74,7 +80,15 @@ end
 
 function InventorySystem:UnequipItem(inventoryObject: Instance)
     if inventoryObject:IsA("Player") then
+        local state = Store:GetState()
+        local inventory = state.GlobalInventory
+    
+        local storeKey = self:GetDataKey(inventoryObject)
+        local inventoryData = inventory[storeKey]
+
+        inventoryData.Data.EquippedSlot = nil
         inventoryObject:SetAttribute("EquippedSlot", nil)
+        self:UpdateInventoryState(state, inventoryData)
     end
 end
 
@@ -189,9 +203,8 @@ function InventorySystem:AddNewItem(inventoryObject: Instance, item: ItemData.It
     end
 
     if inventoryData then
-        inventoryData.Data.LastUpdate = tick()
         inventoryData.RawData[slot] = item
-        Store:SetState(state)
+        self:UpdateInventoryState(state, inventoryData)
     else
         warn("InventorySystem: Attempted to add item to non-existent inventory.")
     end
@@ -247,10 +260,14 @@ function InventorySystem:Update(itemData: FetchedItemData)
     local item = inventoryData.RawData[slot]
 
     if item then
-        inventoryData.Data.LastUpdate = tick()
         inventoryData.RawData[slot] = itemData.Data
-        Store:SetState(state)
+        self:UpdateInventoryState(state, inventoryData)
     end
+end
+
+function InventorySystem:UpdateInventoryState(state, inventoryData)
+    inventoryData.Data.LastUpdate = tick()
+    Store:SetState(state)
 end
 
 return InventorySystem

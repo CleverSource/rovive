@@ -16,14 +16,15 @@ local SLOTS_PER_ROW = 6
 
 local function Hotbar(props)
     local inventoryData = props.storeData
-
+    
     local column = {}
 
     for i = 1, SLOTS_PER_ROW do
         local slotNumber = i + RESERVED_INVENTORY_SLOTS
+
         column[i] = React.createElement(InventorySlot, {
             item = inventoryData.RawData[slotNumber],
-            color = Color3.fromRGB(129, 129, 129),
+            color = inventoryData.Data.EquippedSlot == slotNumber and Color3.fromRGB(87, 137, 255) or Color3.fromRGB(129, 129, 129),
         }, {
             -- TODO
             Keybind = React.createElement("TextLabel", {

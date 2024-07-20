@@ -186,6 +186,10 @@ end
 do
     -- Equip/Unequip item
     EquipItemRemote:Connect(function(player, slot)
+        slot = tonumber(slot)
+        if slot < 25 or slot > 30 then
+            return
+        end
         if slot == 0 or slot == nil then
             InventorySystem:UnequipItem(player)
         end
@@ -378,6 +382,7 @@ do
             InventorySystem:AddNewItem(player, ItemData.new("Buckshot", 59))
             InventorySystem:AddNewItem(player, ItemData.new("Buckshot", 2))
             InventorySystem:AddNewItem(player, ItemData.new("Sawblade Axe"), 26)
+            InventorySystem:AddNewItem(player, ItemData.new("Wood", 692), 27)
             
             task.wait(1)
             InventorySystem:EquipItem(player, 36)

@@ -12,6 +12,8 @@ local Workspace = game:GetService("Workspace")
 local Remotes = require(ReplicatedStorage.Remotes).Client
 local ReplicateRemote = Remotes:Get("Replicate")
 local PickupItemRemote = Remotes:Get("PickupItem")
+local EquipItemRemote = Remotes:Get("EquipItem")
+local UnequipItemRemote = Remotes:Get("UnequipItem")
 
 -- Systems
 local Systems = script.Parent:WaitForChild("Systems")
@@ -61,6 +63,10 @@ ReplicateRemote:Connect(function(typeOfReplication, ...)
     end
 end)
 
+-- Debounces
+local EQUIP_DEBOUNCE = 0.5
+local CAN_EQUIP = true
+
 -- Player input
 task.spawn(function()
     task.wait(1) -- TODO: don't like this.
@@ -68,9 +74,28 @@ task.spawn(function()
     -- Handle player input
     InputSystem:MapKeybinds()
 
-    InputSystem.OnStateChanged:Connect(function(state, value)
+    InputSystem.OnStateChanged:Connect(function(state, value, key)
         if state == "Reload" and value == true then
             ToolSystem:Reload()
+        elseif state == "Equip" and value == true then
+            local slot = (key.KeyCode.Value - 48) + 24
+            local inventoryData = InventorySystem:GetInventoryFromObject(Player)
+
+            if CAN_EQUIP then
+                if slot ~= inventoryData.Data.EquippedSlot then
+                    InventorySystem:EquipItem(Players.LocalPlayer, tonumber(slot))
+                    EquipItemRemote:SendToServer(slot)
+
+                    task.spawn(function()
+                        CAN_EQUIP = false
+                        task.wait(EQUIP_DEBOUNCE)
+                        CAN_EQUIP = true
+                    end)
+                else
+                    InventorySystem:UnequipItem(Players.LocalPlayer)
+                    UnequipItemRemote:SendToServer()
+                end
+            end
         elseif state == "Interact" and value == true then
             if PlayerStateController.HoveredItem ~= nil then
                 local hoveredItemData = PlayerStateController.HoveredItem

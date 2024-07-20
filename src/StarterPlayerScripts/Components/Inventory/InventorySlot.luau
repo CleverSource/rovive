@@ -10,6 +10,8 @@ local GetStaticData = require(ReplicatedStorage.Modules.GetStaticData)
 local Components = script.Parent.Parent
 local InventoryIcon = require(Components.Inventory.InventoryIcon)
 local DirtOverlay = require(Components.Generic.DirtOverlay)
+local DroppableFrame = require(Components.DragDrop.DroppableFrame)
+local DraggableFrame = require(Components.DragDrop.DraggableFrame)
 
 -- Icons
 local Icons = require(ReplicatedStorage.GameIcons)
@@ -17,64 +19,90 @@ local Icons = require(ReplicatedStorage.GameIcons)
 -- TODO: magical system for UI updates being handled PER item, not the entire inventory
 local function InventorySlot(props)
     local item = props.item
+    local slot = props.slot
     local isEmpty = CountTable(item) == 0
 
     local staticData = GetStaticData(item.Name)
     local isGun = staticData and staticData.WeaponType == "Gun"
 
-    return React.createElement("ImageButton", {
-        BackgroundTransparency = 1,
-        Size = UDim2.new(1, 0, 1, 0),
-        SizeConstraint = Enum.SizeConstraint.RelativeYY,
-        Image = Icons.InventorySlot,
-        ImageColor3 = props.color or Color3.fromRGB(99, 99, 99),
-        ImageTransparency = 0.3,
-        ScaleType = Enum.ScaleType.Slice,
-        SliceCenter = Rect.new(10, 10, 90, 90),
+    local inventorySlotRef = React.useRef(nil)
+    
+    return React.createElement(DroppableFrame, {
+        dropId = "InventorySlot",
+        dropRef = inventorySlotRef,
+        dropData = slot,
+        onTargetDropped = function(data, gui)
+            print(`{data} -> {slot}`)
+            print("Handle item movement")
+        end
     }, {
-        DirtOverlay = React.createElement(DirtOverlay),
-        Item = not isEmpty and React.createElement("Frame", {
-            AnchorPoint = Vector2.new(0.5, 0.5),
+        React.createElement("ImageButton", {
             BackgroundTransparency = 1,
-            Position = UDim2.new(0.5, 0, 0.5, 0),
             Size = UDim2.new(1, 0, 1, 0),
-            ZIndex = 2
+            SizeConstraint = Enum.SizeConstraint.RelativeYY,
+            Image = Icons.InventorySlot,
+            ImageColor3 = props.color or Color3.fromRGB(99, 99, 99),
+            ImageTransparency = 0.3,
+            ScaleType = Enum.ScaleType.Slice,
+            SliceCenter = Rect.new(10, 10, 90, 90),
+            ref = inventorySlotRef
         }, {
-            InventoryIcon = React.createElement(InventoryIcon, {
-                itemName = item.Name
+            DirtOverlay = React.createElement(DirtOverlay),
+            not isEmpty and React.createElement(DraggableFrame, {
+                dropId = "InventorySlot",
+                targetRef = inventorySlotRef,
+                targetData = slot,
+                dragBegin = function()
+                    print("Drag begin!")
+                end,
+                dragEnd = function()
+                    print("Drag end!")
+                end
+            }, {
+                Item = React.createElement("Frame", {
+                    AnchorPoint = Vector2.new(0.5, 0.5),
+                    BackgroundTransparency = 1,
+                    Position = UDim2.new(0.5, 0, 0.5, 0),
+                    Size = UDim2.new(1, 0, 1, 0),
+                    ZIndex = 2
+                }, {
+                    InventoryIcon = React.createElement(InventoryIcon, {
+                        itemName = item.Name
+                    }),
+                    Stack = not isGun and item.Stack > 1 and React.createElement("TextLabel", {
+                        BackgroundTransparency = 1,
+                        Position = UDim2.new(0, -4, 0, -2),
+                        Size = UDim2.new(1, 0, 1, 0),
+                        ZIndex = 5,
+                        FontFace = Font.fromName(Enum.Font.Arimo.Name, Enum.FontWeight.Regular, Enum.FontStyle.Normal),
+                        Text = `x{tostring(item.Stack)}`,
+                        TextColor3 = Color3.new(1, 1, 1),
+                        TextSize = 15,
+                        TextStrokeColor3 = Color3.new(0, 0, 0),
+                        TextStrokeTransparency = 0.7,
+                        TextWrapped = true,
+                        TextXAlignment = Enum.TextXAlignment.Right,
+                        TextYAlignment = Enum.TextYAlignment.Bottom
+                    })
+                }),
             }),
-            Stack = not isGun and item.Stack > 1 and React.createElement("TextLabel", {
+            Ammo = isGun and React.createElement("TextLabel", {
                 BackgroundTransparency = 1,
-                Position = UDim2.new(0, -4, 0, -2),
+                Position = UDim2.new(-0.075, -5, 0, -2),
                 Size = UDim2.new(1, 0, 1, 0),
                 ZIndex = 5,
-                FontFace = Font.fromName(Enum.Font.Arimo.Name, Enum.FontWeight.Regular, Enum.FontStyle.Normal),
-                Text = `x{tostring(item.Stack)}`,
+                FontFace = Font.fromName(Enum.Font.Arimo.Name, Enum.FontWeight.Bold, Enum.FontStyle.Normal),
+                Text = tostring(item.Ammo),
                 TextColor3 = Color3.new(1, 1, 1),
-                TextSize = 15,
+                TextSize = 16,
                 TextStrokeColor3 = Color3.new(0, 0, 0),
                 TextStrokeTransparency = 0.7,
                 TextWrapped = true,
                 TextXAlignment = Enum.TextXAlignment.Right,
                 TextYAlignment = Enum.TextYAlignment.Bottom
-            })
-        }),
-        Ammo = isGun and React.createElement("TextLabel", {
-            BackgroundTransparency = 1,
-            Position = UDim2.new(-0.075, -5, 0, -2),
-            Size = UDim2.new(1, 0, 1, 0),
-            ZIndex = 5,
-            FontFace = Font.fromName(Enum.Font.Arimo.Name, Enum.FontWeight.Bold, Enum.FontStyle.Normal),
-            Text = tostring(item.Ammo),
-            TextColor3 = Color3.new(1, 1, 1),
-            TextSize = 16,
-            TextStrokeColor3 = Color3.new(0, 0, 0),
-            TextStrokeTransparency = 0.7,
-            TextWrapped = true,
-            TextXAlignment = Enum.TextXAlignment.Right,
-            TextYAlignment = Enum.TextYAlignment.Bottom
-        }),
-        table.unpack(React.Children.toArray(props.children))
+            }),
+            table.unpack(React.Children.toArray(props.children))
+        })
     })
 end
 

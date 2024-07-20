@@ -78,10 +78,10 @@ task.spawn(function()
         if state == "Reload" and value == true then
             ToolSystem:Reload()
         elseif state == "Equip" and value == true then
-            local slot = (key.KeyCode.Value - 48) + 24
-            local inventoryData = InventorySystem:GetInventoryFromObject(Player)
-
             if CAN_EQUIP then
+                local slot = (key.KeyCode.Value - 48) + 24 -- TODO: this is a hacky way to get the slot number (RESERVED_INVENTORY_SLOTS)
+                local inventoryData = InventorySystem:GetInventoryFromObject(Player)
+
                 if slot ~= inventoryData.Data.EquippedSlot then
                     InventorySystem:EquipItem(Players.LocalPlayer, tonumber(slot))
                     EquipItemRemote:SendToServer(slot)

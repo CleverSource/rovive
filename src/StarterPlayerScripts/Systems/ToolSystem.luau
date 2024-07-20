@@ -263,7 +263,7 @@ function ToolSystem:Reload()
             end
         end)
     end)
-    
+
     self:PlayAnimation("Idle")
 end
 
@@ -279,10 +279,10 @@ function ToolSystem:Fire()
             return
         end
         self.CurrentItem.Ammo -= 1
-    
+
         self.LastFireTick = tick()
         local isHipFire = InputSystem:IsStateActive("Aim") == false
-    
+
         self:PlayAnimation("Shoot")
         self.CurrentTool.ShootingPoint.Fire:Emit(8)
         self.CurrentTool.ShootingPoint.MuzzlePuff:Emit(20)
@@ -296,29 +296,29 @@ function ToolSystem:Fire()
         BulletSystem:ProjectileShoot(Player, self.CurrentItem, bulletOrigin)
     elseif self:GetWeaponType() == "Melee" then
         self.LastFireTick = tick()
-        
+
         if not InputSystem:IsStateActive("Aim") then
             local rayStart, rayDirection = Camera.CFrame.Position, Camera.CFrame.LookVector * (staticData.MeleeMaxDistance)
             local hit = CombatSystem:FindHitLocation(Player, { rayStart, rayDirection })
             local humanoid = hit and (hit.Instance.Parent:FindFirstChild("Humanoid") or hit.Instance.Parent.Parent:FindFirstChildOfClass("Humanoid"))
-    
+
             if not hit then
                 for i = 1, #GameMeleeData.MeleeOffsets do
                     rayStart = (Camera.CFrame * GameMeleeData.MeleeOffsets[i]).Position
                     hit = CombatSystem:FindHitLocation(Player, { rayStart, rayDirection })
                     humanoid = hit and (hit.Instance.Parent:FindFirstChild("Humanoid") or hit.Instance.Parent.Parent:FindFirstChildOfClass("Humanoid"))
-    
+
                     if hit and humanoid then
                         break
                     end
                 end
             end
-    
+
             local animationType = hit and "Hits" or "Swings"
             local animationTypeFolder = self.CurrentTool.Animations:FindFirstChild(animationType)
             local randomAnimation = animationTypeFolder:GetChildren()[RandomNum(1, #animationTypeFolder:GetChildren())]
             local playedAnimation = self:PlayAnimation(randomAnimation.Name)
-    
+
             playedAnimation:GetMarkerReachedSignal("Hit"):Connect(function()
                 if hit then
                     HandleHitRemote:SendToServer(Camera.CFrame)

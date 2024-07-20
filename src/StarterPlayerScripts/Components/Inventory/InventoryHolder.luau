@@ -26,7 +26,8 @@ local function InventoryHolder(props)
         for col = 1, SLOTS_PER_ROW do
             local slotNumber = (row - 1) * SLOTS_PER_ROW + col
             columns[col] = React.createElement(InventorySlot, {
-                item = inventoryData.RawData[slotNumber]
+                item = inventoryData.RawData[slotNumber],
+                slot = slotNumber
             })
         end
 

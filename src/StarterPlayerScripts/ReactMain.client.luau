@@ -10,6 +10,7 @@ local ReactRoblox = require(ReplicatedStorage.Packages.ReactRoblox)
 local Components = script.Parent:WaitForChild("Components")
 local InventoryHolder = require(Components.Inventory.InventoryHolder)
 local StoreContextProvider = require(Components.Store.StoreContextProvider)
+local DragDropProvider = require(Components.DragDrop.DragDropProvider)
 local Hotbar = require(Components.Inventory.Hotbar)
 
 -- Store
@@ -26,22 +27,24 @@ root:render(React.createElement("Frame", {
     StoreProvider = React.createElement(StoreContextProvider, {
         store = Store
     }, {
-        Inventory = React.createElement("Frame", {
-            AnchorPoint = Vector2.new(0.5, 0.5),
-            BackgroundTransparency = 1,
-            Position = UDim2.new(0.5, 0, 0.5, 0),
-            Size = UDim2.new(1, 0, 1, 0),
-        }, {
-            YourInventory = React.createElement("Frame", {
-                AnchorPoint = Vector2.new(0.5, 1),
+        DragDropProvider = React.createElement(DragDropProvider, nil, {
+            Inventory = React.createElement("Frame", {
+                AnchorPoint = Vector2.new(0.5, 0.5),
                 BackgroundTransparency = 1,
-                Position = UDim2.new(0.5, 0, 0.9, -8),
-                Size = UDim2.new(1, 0, 0.34, 0)
+                Position = UDim2.new(0.5, 0, 0.5, 0),
+                Size = UDim2.new(1, 0, 1, 0),
             }, {
-                InventoryHolder = React.createElement(InventoryHolder)
-            })
-        }),
+                YourInventory = React.createElement("Frame", {
+                    AnchorPoint = Vector2.new(0.5, 1),
+                    BackgroundTransparency = 1,
+                    Position = UDim2.new(0.5, 0, 0.9, -8),
+                    Size = UDim2.new(1, 0, 0.34, 0)
+                }, {
+                    InventoryHolder = React.createElement(InventoryHolder)
+                })
+            }),
 
-        Hotbar = React.createElement(Hotbar)
+            Hotbar = React.createElement(Hotbar)
+        })
     }),
 }))

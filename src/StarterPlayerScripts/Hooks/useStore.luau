@@ -33,9 +33,8 @@ return function(innerComponent)
             
             -- Only update when the client and server data are out of sync for the specific inventory
             if self.lastUpdate ~= data.Data.LastUpdate then
-                self:setState({
-                    storeData = data
-                })
+                self.storeData = data
+                self:setState(self:computeProps())
             end
 
             self.lastUpdate = data.Data.LastUpdate
@@ -44,9 +43,26 @@ return function(innerComponent)
         updateState(self.store:GetState())
         self.store.OnStateChanged:Connect(updateState)
     end
+    
+    function connection:computeProps()
+        local computedProps = {
+            storeData = self.storeData
+        }
+        for key, value in next, self.props do
+            if key ~= "innerProps" and key ~= "children" then
+                computedProps[key] = value
+            end
+        end
+        for key, value in next, self.props.innerProps do
+            if key ~= "innerProps" and key ~= "children" then
+                computedProps[key] = value
+            end
+        end
+        return computedProps
+    end
 
     function connection:render()
-        return React.createElement(innerComponent, self.state)
+        return React.createElement(innerComponent, self.state, self.props.innerProps.children)
     end
 
     local connectedComponent = React.Component:extend(componentName)

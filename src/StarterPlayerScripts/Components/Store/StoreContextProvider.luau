@@ -16,7 +16,7 @@ end
 function StoreContextProvider:render()
     return React.createElement(StoreContext.Provider, {
         value = self.store
-    }, self.props.children)
+    },  self.props.children)
 end
 
 return StoreContextProvider

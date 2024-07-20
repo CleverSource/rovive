@@ -24,6 +24,7 @@ local function Hotbar(props)
 
         column[i] = React.createElement(InventorySlot, {
             item = inventoryData.RawData[slotNumber],
+            slot = slotNumber,
             color = inventoryData.Data.EquippedSlot == slotNumber and Color3.fromRGB(87, 137, 255) or Color3.fromRGB(129, 129, 129),
         }, {
             -- TODO

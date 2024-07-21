@@ -44,6 +44,7 @@ local EquipItemRemote = Remotes:Get("EquipItem")
 local UnequipItemRemote = Remotes:Get("UnequipItem")
 local DropItemRemote = Remotes:Get("DropItem")
 local PickupItemRemote = Remotes:Get("PickupItem")
+local MoveItemRemote = Remotes:Get("MoveItem")
 local HandleHitRemote = Remotes:Get("HandleHit")
 local ReloadRemote = Remotes:Get("Reload")
 local ReplicateRemote = Remotes:Get("Replicate")
@@ -224,6 +225,11 @@ do
         end
         
         return false
+    end)
+
+    -- Move item
+    MoveItemRemote:Connect(function(player, fromSlot, toSlot)
+        InventorySystem:MoveItem(player, fromSlot, toSlot)
     end)
 
     -- Drop item

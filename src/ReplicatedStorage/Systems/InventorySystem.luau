@@ -140,6 +140,57 @@ function InventorySystem:AddItem(inventoryObject: Instance, item: ItemData.ItemD
     end
 end
 
+function InventorySystem:MoveItem(inventoryObject: Instance, fromSlot: number, toSlot: number)
+    local state, inventoryData = self:GetStateAndInventoryData(inventoryObject)
+
+    if fromSlot > inventoryData.Data.InventorySlots or toSlot > inventoryData.Data.InventorySlots then
+        warn("InventorySystem: Attempted to move item to/from slot that does not exist.")
+        return
+    end
+
+    local fromItem = self:GetItemData(inventoryObject, fromSlot)
+    local toItem = self:GetItemData(inventoryObject, toSlot)
+    local equippedSlot = self:GetEquippedItemSlot(inventoryObject)
+
+    -- Unequip items if they are in the fromSlot or toSlot
+    if equippedSlot == fromSlot or equippedSlot == toSlot then
+        self:UnequipItem(inventoryObject)
+    end
+
+    if fromItem and fromItem.Data.Name then
+        if toItem and toItem.Data.Name then
+            if fromItem.Name == toItem.Name then
+                -- Same item, handle stacking
+                local totalStack = fromItem.Data.Stack + toItem.Data.Stack
+                local maxStack = fromItem.StaticData.MaxStack
+
+                if totalStack <= maxStack then
+                    -- All items fit into toSlot
+                    toItem.Data.Stack = totalStack
+                    self:Update(toItem)
+                    inventoryData.RawData[fromSlot] = {}
+                else
+                    -- Only some items fit into the toSlot
+                    toItem.Data.Stack = maxStack
+                    self:Update(toItem)
+                    fromItem.Data.Stack = totalStack - maxStack
+                    self:Update(fromItem)
+                end
+            else
+                -- Different items, swap item
+                inventoryData.RawData[fromSlot], inventoryData.RawData[toSlot] = inventoryData.RawData[toSlot], inventoryData.RawData[fromSlot]
+            end
+        else
+            -- Move item to an empty slot
+            inventoryData.RawData[toSlot] = inventoryData.RawData[fromSlot]
+            inventoryData.RawData[fromSlot] = {}
+        end
+        self:UpdateInventoryState(state, inventoryData)
+    else
+        warn("InventorySystem: Attempted to move item from an empty slot.")
+    end
+end
+
 function InventorySystem:IsInventoryFull(inventoryObject: Instance)
     local inventoryData = self:GetInventoryFromObject(inventoryObject)
     for _, item in inventoryData.RawData do

@@ -1,3 +1,6 @@
+-- Services
+local Players = game:GetService("Players")
+
 -- React
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local React = require(ReplicatedStorage.Packages.React)
@@ -6,12 +9,23 @@ local React = require(ReplicatedStorage.Packages.React)
 local CountTable = require(ReplicatedStorage.Modules.CountTable)
 local GetStaticData = require(ReplicatedStorage.Modules.GetStaticData)
 
+-- Remotes
+local Remotes = require(ReplicatedStorage.Remotes).Client
+local MoveItemRemote = Remotes:Get("MoveItem")
+
 -- Components
 local Components = script.Parent.Parent
 local InventoryIcon = require(Components.Inventory.InventoryIcon)
 local DirtOverlay = require(Components.Generic.DirtOverlay)
 local DroppableFrame = require(Components.DragDrop.DroppableFrame)
 local DraggableFrame = require(Components.DragDrop.DraggableFrame)
+
+-- Systems
+local Systems = ReplicatedStorage.Systems
+local InventorySystem = require(Systems.InventorySystem)
+
+-- Variables
+local Player = Players.LocalPlayer
 
 -- Icons
 local Icons = require(ReplicatedStorage.GameIcons)
@@ -26,6 +40,8 @@ local function InventorySlot(props)
     local isGun = staticData and staticData.WeaponType == "Gun"
 
     local inventorySlotRef = React.useRef(nil)
+
+    local dragging, setDragging = React.useState(false)
     
     return React.createElement(DroppableFrame, {
         dropId = "InventorySlot",
@@ -33,7 +49,8 @@ local function InventorySlot(props)
         dropData = slot,
         onTargetDropped = function(data, gui)
             print(`{data} -> {slot}`)
-            print("Handle item movement")
+            InventorySystem:MoveItem(Player, data, slot)
+            MoveItemRemote:SendToServer(data, slot)
         end
     }, {
         React.createElement("ImageButton", {
@@ -53,10 +70,10 @@ local function InventorySlot(props)
                 targetRef = inventorySlotRef,
                 targetData = slot,
                 dragBegin = function()
-                    print("Drag begin!")
+                    setDragging(true)
                 end,
                 dragEnd = function()
-                    print("Drag end!")
+                    setDragging(false)
                 end
             }, {
                 Item = React.createElement("Frame", {
@@ -86,7 +103,7 @@ local function InventorySlot(props)
                     })
                 }),
             }),
-            Ammo = isGun and React.createElement("TextLabel", {
+            Ammo = isGun and not dragging and React.createElement("TextLabel", {
                 BackgroundTransparency = 1,
                 Position = UDim2.new(-0.075, -5, 0, -2),
                 Size = UDim2.new(1, 0, 1, 0),

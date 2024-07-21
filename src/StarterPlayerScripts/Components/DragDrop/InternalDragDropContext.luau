@@ -10,14 +10,14 @@ function InternalDragDropContext.new()
     }, InternalDragDropContext)
 end
 
-local function addSource(self, binding, props)
+local function addSource(self, ref, props)
     local dropId = props.dropId
     local data = props.targetData
     local dragEnd = props.dragEnd
     local dragBegin = props.dragBegin
     local onDragging = props.onDragging
 
-    self.DragSources[binding] = {
+    self.DragSources[ref] = {
         dropId = dropId,
         data = data,
         dragBegin = dragBegin,
@@ -28,36 +28,36 @@ local function addSource(self, binding, props)
     }
 end
 
-local function removeSource(self, binding)
-    self.DragSources[binding] = nil
+local function removeSource(self, ref)
+    self.DragSources[ref] = nil
 end
 
-local function addTarget(self, binding, props)
-    local dropIds, onDrop, dropBinding, dropData = props.dropId, props.onTargetDropped, props.dropRef, props.dropData
-    self.DropTargets[binding] = {
+local function addTarget(self, ref, props)
+    local dropIds, onDrop, dropRef, dropData = props.dropId, props.onTargetDropped, props.dropRef, props.dropData
+    self.DropTargets[ref] = {
         dropIds = type(dropIds) == "table" and dropIds or { dropIds },
         onDrop = onDrop,
-        dropBinding = dropBinding,
+        dropRef = dropRef,
         dropData = dropData,
         Identifier = HttpService:GenerateGUID(false)
     }
 end
 
-local function removeTarget(self, binding)
-    self.DropTargets[binding] = nil
+local function removeTarget(self, ref)
+    self.DropTargets[ref] = nil
 end
 
 function InternalDragDropContext:GetTargetsByDropId(dropId)
     local targets = {}
 
-    for binding, target in next, self.DropTargets do
+    for ref, target in next, self.DropTargets do
         for _, id in next, target.dropIds do
-            if id == dropId then
+            if table.find(dropId, id) then
                 table.insert(targets, {
-                    Binding = binding,
+                    Ref = ref,
                     Target = target,
                     OnDrop = target.onDrop,
-                    DropBinding = target.dropBinding,
+                    DropRef = target.dropRef,
                     DropData = target.dropData 
                 })
             end

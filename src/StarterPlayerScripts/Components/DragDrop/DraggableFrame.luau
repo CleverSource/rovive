@@ -120,12 +120,11 @@ function DraggableFrame:setDraggable(dragGui)
                 if input.UserInputState == Enum.UserInputState.End and (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then
                     if reachedDraggingThreshold then
                         local dropped = false
-                        local dropBinding = nil
 
                         local mousePos = UserInputService:GetMouseLocation() - GuiService:GetGuiInset()
                         local hoveredGui = PlayerGui:GetGuiObjectsAtPosition(mousePos.X, mousePos.Y)
                         for _, target in self.dropTargets do
-                            local targetGui = target.Binding.current
+                            local targetGui = target.Ref.current
                             if targetGui and not dropped then
                                 for _, gui in hoveredGui do
                                     if gui == targetGui then
@@ -134,9 +133,8 @@ function DraggableFrame:setDraggable(dragGui)
                                             data = self.props.targetData,
                                             dropId = self.props.dropId,
                                             source = self.targetRef,
-                                            target = target.Binding
+                                            target = target.Ref
                                         })
-                                        dropBinding = target.DropData
                                         dropped = true
                                         break
                                     end
@@ -145,29 +143,6 @@ function DraggableFrame:setDraggable(dragGui)
                         end
 
                         if self._alive then
-                            -- OLD HACK, seems unnecessary now
-                            -- if dropBinding ~= nil and dropped == true then
-                            --     local playerData = InventorySystem:GetInventoryFromObject(Player)
-                            --     -- local targetData = self.props.targetData
-                            --     local dropData = dropBinding
-                            --     print(playerData.RawData[dropData], CountTable(playerData.RawData[dropData]))
-                            --     local occupied = CountTable(playerData.RawData[dropData]) > 0
-
-                            --     if occupied then
-                            --         print("?")
-                            --         -- TODO
-                            --         self.position = React.None
-                            --         self.dragging = false
-                            --         self:setState(self:computeProps())
-                            --     else
-                            --         print("not occupied")
-                            --         self.dragging = false
-                            --     end
-                            -- else
-                                -- self.position = React.None
-                                -- self.dragging = false
-                                -- self:setState(self:computeProps())
-                            -- end
                             if dropResetsPosition then
                                 self.position = React.None
                                 self.dragging = false

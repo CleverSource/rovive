@@ -46,12 +46,19 @@ local function InventorySlot(props)
     return React.createElement(DroppableFrame, {
         dropId = "InventorySlot",
         dropRef = inventorySlotRef,
-        dropData = slot,
         onTargetDropped = function(data, gui)
+            if data == slot then
+                return
+            end
             print(`{data} -> {slot}`)
             InventorySystem:MoveItem(Player, data, slot)
             MoveItemRemote:SendToServer(data, slot)
-        end
+        end,
+        renderProps = {
+            BackgroundTransparency = 1,
+            Size = UDim2.fromScale(1, 1),
+            SizeConstraint = Enum.SizeConstraint.RelativeYY,
+        }
     }, {
         React.createElement("ImageButton", {
             BackgroundTransparency = 1,
@@ -65,8 +72,8 @@ local function InventorySlot(props)
             ref = inventorySlotRef
         }, {
             DirtOverlay = React.createElement(DirtOverlay),
-            not isEmpty and React.createElement(DraggableFrame, {
-                dropId = "InventorySlot",
+            Icon = not isEmpty and React.createElement(DraggableFrame, {
+                dropId = { "InventorySlot", "DropZone" },
                 targetRef = inventorySlotRef,
                 targetData = slot,
                 dragBegin = function()
@@ -74,13 +81,18 @@ local function InventorySlot(props)
                 end,
                 dragEnd = function()
                     setDragging(false)
-                end
+                end,
+                renderProps = {
+                    BackgroundTransparency = 1,
+                    Size = UDim2.fromScale(1, 1),
+                    SizeConstraint = Enum.SizeConstraint.RelativeYY,
+                }
             }, {
                 Item = React.createElement("Frame", {
                     AnchorPoint = Vector2.new(0.5, 0.5),
                     BackgroundTransparency = 1,
                     Position = UDim2.new(0.5, 0, 0.5, 0),
-                    Size = UDim2.new(1, 0, 1, 0),
+                    Size = not dragging and UDim2.new(1, 0, 1, 0) or UDim2.new(0, inventorySlotRef.current.AbsoluteSize.X + 20, 0, inventorySlotRef.current.AbsoluteSize.Y + 20),
                     ZIndex = 2
                 }, {
                     InventoryIcon = React.createElement(InventoryIcon, {

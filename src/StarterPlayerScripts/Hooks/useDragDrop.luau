@@ -22,23 +22,27 @@ return function(innerComponent)
 
     function connection:computeProps()
         local computedProps = {
-            renderProps = {
-                BackgroundTransparency = 1,
-                Size = UDim2.fromScale(1, 1),
-                SizeConstraint = Enum.SizeConstraint.RelativeYY,
-            },
             dropContext = self.dropContext
         }
-        for key, value in next, self.props do
-            if key ~= "innerProps" and key ~= "children" then
-                computedProps[key] = value
+
+        local function mergeRenderProps(target, source)
+            for key, value in next, source do
+                if key ~= "innerProps" and key ~= "children" then
+                    target[key] = value
+                elseif key == "renderProps" then
+                    for renderKey, renderValue in next, value do
+                        target.renderProps[renderKey] = renderValue
+                    end
+                end 
             end
         end
-        for key, value in next, self.props.innerProps do
-            if key ~= "innerProps" and key ~= "children" then
-                computedProps[key] = value
-            end
+
+        mergeRenderProps(computedProps, self.props)
+
+        if self.props.innerProps then
+            mergeRenderProps(computedProps, self.props.innerProps)
         end
+
         return computedProps
     end
 

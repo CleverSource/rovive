@@ -12,6 +12,7 @@ local InventoryHolder = require(Components.Inventory.InventoryHolder)
 local StoreContextProvider = require(Components.Store.StoreContextProvider)
 local DragDropProvider = require(Components.DragDrop.DragDropProvider)
 local Hotbar = require(Components.Inventory.Hotbar)
+local ItemDropZone = require(Components.Inventory.ItemDropZone)
 
 -- Store
 local Store = require(ReplicatedStorage.Store)
@@ -28,6 +29,7 @@ root:render(React.createElement("Frame", {
         store = Store
     }, {
         DragDropProvider = React.createElement(DragDropProvider, nil, {
+            -- Inventory
             Inventory = React.createElement("Frame", {
                 AnchorPoint = Vector2.new(0.5, 0.5),
                 BackgroundTransparency = 1,
@@ -44,7 +46,32 @@ root:render(React.createElement("Frame", {
                 })
             }),
 
-            Hotbar = React.createElement(Hotbar)
+            -- Hotbar
+            Hotbar = React.createElement(Hotbar),
+
+            -- Drop zones (for dropping items from inventory)
+            DropZones = React.createElement("Frame", {
+                BackgroundTransparency = 1,
+                Size = UDim2.new(1, 0, 1, 0),
+                AnchorPoint = Vector2.new(0.5, 0.5),
+                Position = UDim2.new(0.5, 0, 0.5, 0),
+            }, {
+                React.createElement(ItemDropZone, { -- Top zone
+                    AnchorPoint = Vector2.new(0.5, 0),
+                    Position = UDim2.new(0.5, 0, 0, 0),
+                    Size = UDim2.new(1, 0, 0.5, 0)
+                }),
+                React.createElement(ItemDropZone, { -- Right zone
+                    AnchorPoint = Vector2.new(1, 0),
+                    Position = UDim2.new(1, 0, 0.5, 0),
+                    Size = UDim2.new(0.35, 0, 0.5, 0)
+                }),
+                React.createElement(ItemDropZone, { -- Left zone
+                    AnchorPoint = Vector2.new(0, 0),
+                    Position = UDim2.new(0, 0, 0.5, 0),
+                    Size = UDim2.new(0.35, 0, 0.5, 0)
+                })
+            })
         })
     }),
 }))

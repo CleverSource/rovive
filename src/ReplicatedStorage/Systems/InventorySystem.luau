@@ -143,6 +143,10 @@ end
 function InventorySystem:MoveItem(inventoryObject: Instance, fromSlot: number, toSlot: number)
     local state, inventoryData = self:GetStateAndInventoryData(inventoryObject)
 
+    if fromSlot == toSlot then
+        return
+    end
+
     if fromSlot > inventoryData.Data.InventorySlots or toSlot > inventoryData.Data.InventorySlots then
         warn("InventorySystem: Attempted to move item to/from slot that does not exist.")
         return
@@ -150,6 +154,7 @@ function InventorySystem:MoveItem(inventoryObject: Instance, fromSlot: number, t
 
     local fromItem = self:GetItemData(inventoryObject, fromSlot)
     local toItem = self:GetItemData(inventoryObject, toSlot)
+
     local equippedSlot = self:GetEquippedItemSlot(inventoryObject)
 
     -- Unequip items if they are in the fromSlot or toSlot

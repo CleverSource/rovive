@@ -38,6 +38,10 @@ function DraggableFrame:init(props)
         error("DraggableFrame requires a dropId prop to be set.")
     end
 
+    if props.targetRef == nil then
+        error("DraggableFrame requires a targetRef prop to be set.")
+    end
+
     self.dropContext = dropContext
     self.targetRef = targetRef
     self._alive = true
@@ -46,6 +50,11 @@ end
 
 function DraggableFrame:setDraggable(dragGui)
     local dropContext = self.props.dropContext
+
+    local dropResetsPosition = self.props.dropResetsPosition
+    if dropResetsPosition == nil then
+        dropResetsPosition = true
+    end
 
     if self._inputBegan then
         self._inputBegan:Disconnect()
@@ -67,7 +76,6 @@ function DraggableFrame:setDraggable(dragGui)
 
     if not dragGui then
         warn("Ref not set for " .. tostring(dragGui))
-        
     end
 
     local dragInput
@@ -137,24 +145,35 @@ function DraggableFrame:setDraggable(dragGui)
                         end
 
                         if self._alive then
-                            if dropBinding ~= nil and dropped == true then
-                                local playerData = InventorySystem:GetInventoryFromObject(Player)
-                                local targetData = self.props.targetData
-                                local dropData = dropBinding
-                                local occupied = CountTable(playerData.RawData[dropData]) > 0
+                            -- OLD HACK, seems unnecessary now
+                            -- if dropBinding ~= nil and dropped == true then
+                            --     local playerData = InventorySystem:GetInventoryFromObject(Player)
+                            --     -- local targetData = self.props.targetData
+                            --     local dropData = dropBinding
+                            --     print(playerData.RawData[dropData], CountTable(playerData.RawData[dropData]))
+                            --     local occupied = CountTable(playerData.RawData[dropData]) > 0
 
-                                if occupied then
-                                    -- TODO
-                                    self.position = React.None
-                                    self.dragging = false
-                                    self:setState(self:computeProps())
-                                else
-                                    self.dragging = false
-                                end
-                            else
+                            --     if occupied then
+                            --         print("?")
+                            --         -- TODO
+                            --         self.position = React.None
+                            --         self.dragging = false
+                            --         self:setState(self:computeProps())
+                            --     else
+                            --         print("not occupied")
+                            --         self.dragging = false
+                            --     end
+                            -- else
+                                -- self.position = React.None
+                                -- self.dragging = false
+                                -- self:setState(self:computeProps())
+                            -- end
+                            if dropResetsPosition then
                                 self.position = React.None
                                 self.dragging = false
                                 self:setState(self:computeProps())
+                            else
+                                self.dragging = false
                             end
                             mouseDown = false
 

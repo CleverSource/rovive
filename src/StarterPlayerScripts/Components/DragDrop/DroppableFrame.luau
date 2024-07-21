@@ -20,6 +20,10 @@ function DroppableFrame:init(props)
         error("DroppableFrame requires a dropId prop to be set.")
     end
 
+    if props.dropRef == nil then
+        error("DroppableFrame requires a dropRef prop to be set.")
+    end
+
     self.dropContext = dropContext    
     self.dropRef = dropRef
 end

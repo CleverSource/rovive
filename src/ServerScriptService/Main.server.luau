@@ -4,6 +4,7 @@ local Debris = game:GetService("Debris")
 local HttpService = game:GetService("HttpService")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local ServerStorage = game:GetService("ServerStorage")
 local Workspace = game:GetService("Workspace")
 
 -- Data Objects
@@ -27,6 +28,9 @@ local Tools = Assets.Tools
 local InventorySystem = require(ReplicatedStorage.Systems.InventorySystem)
 local CombatSystem = require(ReplicatedStorage.Systems.CombatSystem)
 local EffectsSystem = require(ReplicatedStorage.Systems.EffectsSystem)
+
+-- Server Systems
+local ServerAnimator = require(ServerStorage.ServerSystems.ServerAnimator)
 
 -- Game Data
 local GameBulletData = require(ReplicatedStorage.GameBulletData)
@@ -188,6 +192,7 @@ do
     local function UnequipItem(player)
         InventorySystem:UnequipItem(player)
         EffectsSystem:UnequipItem(player)
+        ServerAnimator:StopAnimations(player)
     end
 
     -- Equip/Unequip item
@@ -209,10 +214,10 @@ do
             if itemData.StaticData.Equipable then
                 EffectsSystem:EquipItem(itemData)
             end
-        end
 
-        -- Handle server animation
-        
+             -- Handle server animation
+            ServerAnimator:PlayAnimation(player, itemData)
+        end
     end)
 
     UnequipItemRemote:Connect(function(player)

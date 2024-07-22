@@ -71,11 +71,18 @@ local function CalculateViewModelOffset()
         elseif currentImportantState == "Sprint" then
             if ToolSystem:GetWeaponType() == "Gun" then
                 -- TODO: make this check weapon hold type? (e.g. pistol, rifle, melee, etc)
-                cframe = cframe * CFrame.new(0, -0.75, 0) * CFrame.new(math.sin(currentTick * currentAnimationSpeed) / 40, math.sin(currentTick * (currentAnimationSpeed * 2)) / 5, math.sin(currentTick * currentAnimationSpeed) / 40)
-                        * CFrame.Angles(0, math.rad(math.sin(currentTick * currentAnimationSpeed) * 8), 0)
+                if ToolSystem:GetHoldType() == "OneHandWeapon" then
+                    cframe = cframe * CFrame.new(0, -0.75, 0) * CFrame.new(math.sin(currentTick * currentAnimationSpeed) / 40, math.sin(currentTick * (currentAnimationSpeed * 2)) / 5, math.sin(currentTick * currentAnimationSpeed) / 40)
+                            * CFrame.Angles(0, math.rad(math.sin(currentTick * currentAnimationSpeed) * 8), 0)
+                elseif ToolSystem:GetHoldType() == "TwoHandWeapon" then
+                    cframe = cframe * CFrame.new(0, -1.5, 0) * CFrame.new(math.sin(currentTick * currentAnimationSpeed) / 40, math.sin(currentTick * (currentAnimationSpeed * 2)) / 5, 0)
+                            * CFrame.Angles(0, math.rad(math.sin(currentTick * currentAnimationSpeed) * 8), -math.rad(math.sin(currentTick * currentAnimationSpeed) * 10))
+                end
             elseif ToolSystem:GetWeaponType() == "Melee" then
-                cframe = cframe * CFrame.new(0, -1, 0) * CFrame.new(math.sin(currentTick * currentAnimationSpeed) / 40, math.sin(currentTick * (currentAnimationSpeed * 2)) / 5, 0) 
-                    * CFrame.Angles(0, math.rad(math.sin(currentTick * currentAnimationSpeed) * 8), -math.rad(math.sin(currentTick * currentAnimationSpeed) * 10))
+                if ToolSystem:GetHoldType() == "OneHandMelee" then
+                    cframe = cframe * CFrame.new(0, -1, 0) * CFrame.new(math.sin(currentTick * currentAnimationSpeed) / 40, math.sin(currentTick * (currentAnimationSpeed * 2)) / 5, 0) 
+                        * CFrame.Angles(0, math.rad(math.sin(currentTick * currentAnimationSpeed) * 8), -math.rad(math.sin(currentTick * currentAnimationSpeed) * 10))
+                end
             end
         end
     else

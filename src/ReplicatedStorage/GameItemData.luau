@@ -10,6 +10,8 @@
     ItemData:
         MaxStack: number (default: 1) -> The maximum amount of items that can be stacked in a single slot
         Icon: string or number -> The icon of the item, links to an in-game icon
+        ServerHoldType: string -> The animation type that the server should play when the item is used
+        ClientHoldType: string (default: ServerHoldType, if set) -> The animation type that the client should play when the item is used
 
         Weapon data properties:
         Equipable: boolean (default: false) -> Whether or not the item can be equipped
@@ -39,6 +41,9 @@ export type BulletPattern = "Spread" | "Single"
 
 export type StaticData = {
     Name: string,
+    Icon: string | number,
+    ServerHoldType: string,
+    ClientHoldType: string,
     MaxStack: number,
     Equipable: boolean,
     WeaponType: WeaponType,
@@ -61,6 +66,7 @@ local ItemData = {
 
     ["Sawblade Axe"] = {
         Icon = 18568881613,
+        ServerHoldType = "OneHandMelee",
 
         Equipable = true,
         WeaponType = "Melee",
@@ -77,6 +83,8 @@ local ItemData = {
 
     ["Double Barrel"] = {
         Icon = 18568905098,
+        ServerHoldType = "TwoHandWeapon",
+        ClientHoldType = "OneHandWeapon",
 
         Equipable = true,
         WeaponType = "Gun",
@@ -114,6 +122,10 @@ for itemName, itemData in ItemData do
     
     if itemData.Icon then
         itemData.Icon = "rbxassetid://" .. itemData.Icon
+    end
+
+    if itemData.ServerHoldType and not itemData.ClientHoldType then
+        itemData.ClientHoldType = itemData.ServerHoldType
     end
 end
 

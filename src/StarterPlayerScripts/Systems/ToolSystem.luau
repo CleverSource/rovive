@@ -70,6 +70,13 @@ function ToolSystem:GetWeaponType(): () -> GameItemData.WeaponType
     end
 end
 
+function ToolSystem:GetHoldType()
+    local staticData = self:GetStaticData()
+    if staticData then
+        return staticData.ClientHoldType
+    end
+end
+
 function ToolSystem:GetBulletPattern(): () -> GameItemData.BulletPattern
     local staticData = self:GetStaticData()
     if staticData then
@@ -88,7 +95,9 @@ end
 
 function ToolSystem:StopAnimation(animationName: string, fadeTime: number?)
     if self.ViewModel then
-        for _, track: AnimationTrack in self.ViewModel.Humanoid:GetPlayingAnimationTracks() do
+        local animator: Animator = self.ViewModel.Humanoid:FindFirstChildOfClass("Animator")
+
+        for _, track: AnimationTrack in animator:GetPlayingAnimationTracks() do
             if track.Name == animationName then
                 track:Stop(fadeTime or 0.1)
             end
@@ -102,7 +111,8 @@ function ToolSystem:PlayAnimation(animationName: string, yield: boolean?)
         return
     end
 
-    local track: AnimationTrack = self.ViewModel.Humanoid:LoadAnimation(animation)
+    local animator: Animator = self.ViewModel.Humanoid:FindFirstChildOfClass("Animator")
+    local track: AnimationTrack = animator:LoadAnimation(animation)
     track:Play()
     track.Name = animationName
     track:AdjustSpeed(animation:GetAttribute("Speed") or 1)

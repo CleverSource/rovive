@@ -53,6 +53,50 @@ function EffectsSystem:MakeBulletHole(ray: RaycastResult)
     Debris:AddItem(bulletHole, 10)
 end
 
+function EffectsSystem:EquipItem(itemData)
+    local scaleFactor = 0.75
+
+    local inventoryObj: Player = itemData.InventoryObj
+    EffectsSystem:UnequipItem(inventoryObj)
+
+    local toolObject = Assets.Tools:FindFirstChild(itemData.Name)
+    if toolObject and inventoryObj:IsA("Player") and inventoryObj.Character then
+        toolObject = toolObject:Clone()
+        toolObject.Name = "Tool"
+        toolObject:ScaleTo(scaleFactor)
+        for _, part in toolObject:GetChildren() do
+            if part:IsA("BasePart") then
+                part.Anchored = false
+                part.CanCollide = false
+            end
+        end
+        toolObject.PrimaryPart.CFrame = inventoryObj.Character.RightHand.CFrame
+        toolObject.Parent = inventoryObj.Character
+
+        local weld = Instance.new("Weld")
+        weld.Name = "ToolWeld"
+        weld.Part0 = inventoryObj.Character.RightHand
+        weld.Part1 = toolObject.PrimaryPart
+        weld.C0 = CFrame.new(0, 0, 0) * CFrame.Angles(-0.5 * math.pi, 0, 0)
+        weld.C1 = inventoryObj.Character.RightHand.CFrame:ToObjectSpace(toolObject.PrimaryPart.CFrame)
+        weld.Parent = inventoryObj.Character.RightHand
+    else
+        warn("Could not find tool object for item", itemData.Name)
+    end
+end
+
+function EffectsSystem:UnequipItem(player)
+    local character = player.Character
+
+    if character then
+        for _, tool in ipairs(character:GetDescendants()) do
+            if tool.Name == "Tool" or tool.Name == "ToolWeld" then
+                tool:Destroy()
+            end
+        end
+    end
+end
+
 function EffectsSystem:MakeDroppedItem(itemData)
     local inventoryObj = itemData.InventoryObj
     if inventoryObj:IsA("Player") then

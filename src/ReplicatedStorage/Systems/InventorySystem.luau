@@ -77,7 +77,7 @@ end
 function InventorySystem:UnequipItem(inventoryObject: Instance)
     if inventoryObject:IsA("Player") then
         local state, inventoryData = self:GetStateAndInventoryData(inventoryObject)
-
+        
         inventoryData.Data.EquippedSlot = nil
         inventoryObject:SetAttribute("EquippedSlot", nil)
         self:UpdateInventoryState(state, inventoryData)
@@ -158,6 +158,7 @@ function InventorySystem:MoveItem(inventoryObject: Instance, fromSlot: number, t
     local equippedSlot = self:GetEquippedItemSlot(inventoryObject)
 
     -- Unequip items if they are in the fromSlot or toSlot
+    -- This will only unequip locally due to how the inventory system is called during movement
     if equippedSlot == fromSlot or equippedSlot == toSlot then
         self:UnequipItem(inventoryObject)
     end

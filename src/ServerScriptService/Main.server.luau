@@ -82,13 +82,13 @@ local function OnRayHit(cast, result: RaycastResult, _, bullet)
             local toolModel = tool:Clone()
             local toolObj = toolModel.PrimaryPart
             Debris:AddItem(toolModel, 300)
-            
+
             -- TODO: iron out the math on this in the future, specifically, items showing through walls
             -- TODO: tools despawn they never hit the ground or an object
             local _, _, _, R00, R01, R02, R10, R11, R12, R20, R21, R22 = bullet.CFrame:GetComponents()
             local rotationMatrix = CFrame.new(0, 0, 0, R00, R01, R02, R10, R11, R12, R20, R21, R22)
             local rotationOffset = CFrame.Angles(math.rad(-120), 0, 0)
-            
+
             toolObj.CFrame = CFrame.new(result.Position) * rotationMatrix * rotationOffset
             toolModel.Parent = Workspace.DroppedItems
             toolObj.CanCollide = false
@@ -185,20 +185,38 @@ end
 
 -- Remotes
 do
+    local function UnequipItem(player)
+        InventorySystem:UnequipItem(player)
+        EffectsSystem:UnequipItem(player)
+    end
+
     -- Equip/Unequip item
     EquipItemRemote:Connect(function(player, slot)
+        -- Handle equip in the inventory system
         slot = tonumber(slot)
         if slot < 25 or slot > 30 then
             return
         end
         if slot == 0 or slot == nil then
-            InventorySystem:UnequipItem(player)
+            UnequipItem(player)
         end
         InventorySystem:EquipItem(player, tonumber(slot))
+
+        -- Display tool in player's hand
+        local equippedItem = InventorySystem:GetEquippedItemSlot(player)
+        if equippedItem then
+            local itemData = InventorySystem:GetItemData(player, equippedItem)
+            if itemData.StaticData.Equipable then
+                EffectsSystem:EquipItem(itemData)
+            end
+        end
+
+        -- Handle server animation
+        
     end)
 
     UnequipItemRemote:Connect(function(player)
-        InventorySystem:UnequipItem(player)
+        UnequipItem(player)
     end)
 
     -- Pickup item
@@ -229,6 +247,13 @@ do
 
     -- Move item
     MoveItemRemote:Connect(function(player, fromSlot, toSlot)
+        local equippedSlot = InventorySystem:GetEquippedItemSlot(player)
+
+        -- Unequip items if they are in the fromSlot or toSlot
+        if equippedSlot == fromSlot or equippedSlot == toSlot then
+            UnequipItem(player)
+        end
+
         InventorySystem:MoveItem(player, fromSlot, toSlot)
     end)
 
@@ -236,7 +261,7 @@ do
     DropItemRemote:Connect(function(player, slot)
         -- TODO: other inventories, e.g. dropping from chests
         if InventorySystem:GetEquippedItemSlot(player) == tonumber(slot) then
-            InventorySystem:UnequipItem(player)
+            UnequipItem(player)
         end
 
         local item = InventorySystem:GetItemData(player, tonumber(slot))
@@ -315,7 +340,7 @@ do
 
         if weaponData.WeaponType == "Melee" and thrownTool == true then
             local oldActiveWeapon = table.clone(activeWeapon)
-            InventorySystem:UnequipItem(player)
+            UnequipItem(player)
             activeWeapon.Data = {}
             InventorySystem:Update(activeWeapon)
 

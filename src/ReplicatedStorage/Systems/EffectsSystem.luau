@@ -78,6 +78,7 @@ function EffectsSystem:EquipItem(itemData)
         weld.Part0 = inventoryObj.Character.RightHand
         weld.Part1 = toolObject.PrimaryPart
         weld.C0 = CFrame.new(0, 0, 0) * CFrame.Angles(-0.5 * math.pi, 0, 0)
+        -- TODO: better grip position
         weld.C1 = inventoryObj.Character.RightHand.CFrame:ToObjectSpace(toolObject.PrimaryPart.CFrame)
         weld.Parent = inventoryObj.Character.RightHand
     else

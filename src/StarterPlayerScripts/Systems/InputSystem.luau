@@ -147,4 +147,16 @@ function InputSystem:GetImportantState()
     return mostImportantState
 end
 
+function InputSystem:IsKeyActive(key)
+    if type(key) == "userdata" then
+        return UserInputService:IsKeyDown(key)
+    elseif type(key) == "table" then
+        for _, k in key do
+            if UserInputService:IsKeyDown(k) then
+                return true
+            end
+        end
+    end
+end
+
 return InputSystem

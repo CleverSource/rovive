@@ -327,6 +327,7 @@ do
 
     -- Handle hit
     HandleHitRemote:Connect(function(player: Player, origin: CFrame, thrownTool: boolean?)
+        -- TODO: effect system needs to handle shooting and etc appropriately for replication
         local character = player.Character
         local humanoid = character:FindFirstChild("Humanoid")
         local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")

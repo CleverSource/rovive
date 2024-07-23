@@ -14,8 +14,8 @@ local MovementHistory = {}
 
 -- Constants
 -- TODO: grace period should be dynamic.. somehow
-local GRACE_PERIOD_FRAMES = 14
-local PLAYER_MAGNITUDE_THRESHOLD = 0.01
+-- local GRACE_PERIOD_FRAMES = 14
+-- local PLAYER_MAGNITUDE_THRESHOLD = 0.01
 
 -- Systems
 local Systems = ReplicatedStorage:WaitForChild("Systems")
@@ -32,25 +32,25 @@ local function CalculateViewModelOffset()
     local currentTick = tick()
 
     -- Is player moving based on frame grace period
-    local playerMoving = false
-    local moveCount = 0
+    -- local playerMoving = false
+    -- local moveCount = 0
 
-    local movementMagnitude = (PlayerStateController.CurrentPosition - PlayerStateController.LastPosition).Magnitude
-    table.insert(MovementHistory, 1, movementMagnitude)
+    -- local movementMagnitude = (PlayerStateController.CurrentPosition - PlayerStateController.LastPosition).Magnitude
+    -- table.insert(MovementHistory, 1, movementMagnitude)
 
-    if #MovementHistory > GRACE_PERIOD_FRAMES then
-        table.remove(MovementHistory)
-    end
+    -- if #MovementHistory > GRACE_PERIOD_FRAMES then
+    --     table.remove(MovementHistory)
+    -- end
 
-    for _, magnitude in ipairs(MovementHistory) do
-        if magnitude > PLAYER_MAGNITUDE_THRESHOLD then
-            moveCount = moveCount + 1
-        end
-    end
+    -- for _, magnitude in ipairs(MovementHistory) do
+    --     if magnitude > PLAYER_MAGNITUDE_THRESHOLD then
+    --         moveCount = moveCount + 1
+    --     end
+    -- end
 
-    if moveCount > GRACE_PERIOD_FRAMES / 2 then
-        playerMoving = true
-    end
+    -- if moveCount > GRACE_PERIOD_FRAMES / 2 then
+    --     playerMoving = true
+    -- end
 
     -- Animation speed changes based on movement speed
     local currentImportantState = InputSystem:GetImportantState()
@@ -62,8 +62,9 @@ local function CalculateViewModelOffset()
     end
 
     -- Walking sway
-    if playerMoving then
-    -- if UserInputService:IsKeyDown(Enum.KeyCode.W) or UserInputService:IsKeyDown(Enum.KeyCode.D) or UserInputService:IsKeyDown(Enum.KeyCode.S) or UserInputService:IsKeyDown(Enum.KeyCode.A) then
+    -- TODO: might have to double down and accept I need to use user input service
+    -- if playerMoving then
+    if InputSystem:IsKeyActive({ Enum.KeyCode.W, Enum.KeyCode.S, Enum.KeyCode.A, Enum.KeyCode.D }) then
         if currentImportantState == nil then
             cframe = cframe * CFrame.new(math.sin(currentTick * currentAnimationSpeed) / 14, math.sin(currentTick * (currentAnimationSpeed * 2)) / 10, 0)
         elseif currentImportantState == "Aim" then

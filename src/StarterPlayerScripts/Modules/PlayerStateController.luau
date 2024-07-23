@@ -1,8 +1,11 @@
+-- Services
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Workspace = game:GetService("Workspace")
 
+-- Trove
 local Trove = require(ReplicatedStorage.Packages.Trove)
 
+-- Variables
 local CurrentCamera = Workspace.CurrentCamera
 
 local PlayerStateController = {

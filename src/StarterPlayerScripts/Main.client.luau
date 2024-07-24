@@ -96,6 +96,19 @@ task.spawn(function()
                     UnequipItemRemote:SendToServer()
                 end
             end
+        elseif state == "Sprint" then
+            local humanoid = PlayerStateController.Humanoid
+            if humanoid then
+                local movingBackwards = InputSystem:IsKeyActive(Enum.KeyCode.S)
+                
+                humanoid.WalkSpeed = (value and GameProperties.SprintWalkSpeed or GameProperties.DefaultWalkSpeed) * (movingBackwards and 0.75 or 1)
+            end
+        elseif state == "Crouch" then
+            local humanoid = PlayerStateController.Humanoid
+            if humanoid then
+                humanoid.HipHeight = value and GameProperties.CrouchHipHeight or GameProperties.DefaultHipHeight
+                humanoid.WalkSpeed = value and GameProperties.CrouchWalkSpeed or GameProperties.DefaultWalkSpeed
+            end
         elseif state == "Interact" and value == true then
             if PlayerStateController.HoveredItem ~= nil then
                 local hoveredItemData = PlayerStateController.HoveredItem

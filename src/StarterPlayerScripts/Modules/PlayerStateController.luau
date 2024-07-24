@@ -5,6 +5,9 @@ local Workspace = game:GetService("Workspace")
 -- Trove
 local Trove = require(ReplicatedStorage.Packages.Trove)
 
+-- Game Properties
+local GameProperties = require(ReplicatedStorage.GameProperties)
+
 -- Variables
 local CurrentCamera = Workspace.CurrentCamera
 
@@ -29,6 +32,7 @@ function PlayerStateController:AddCharacter(character: Instance)
 
     self.Character = character
     self.Humanoid = humanoid
+    self.Humanoid.WalkSpeed = GameProperties.DefaultWalkSpeed
     self.HumanoidRootPart = humanoidRootPart
     self.IsAlive = true
     self.CurrentPosition = Vector2.new(humanoidRootPart.Position.X, humanoidRootPart.Position.Z)

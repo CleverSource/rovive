@@ -50,11 +50,13 @@ local ManualStates = {
 }
 
 local _onStateChanged = Instance.new("BindableEvent")
+local _bindToKey = Instance.new("BindableEvent")
 local InputSystem = {
     Keybinds = {},
     States = {},
     Blocked = {},
-    OnStateChanged = _onStateChanged.Event
+    OnStateChanged = _onStateChanged.Event,
+    BindTokey = _bindToKey.Event
 }
 
 -- For listening to player events
@@ -87,6 +89,7 @@ function InputSystem:MapKeybinds()
                 self.States[keybind] = true
                 _onStateChanged:Fire(keybind, true, input)
             end
+            _bindToKey:fire(input)
         end
     end)
 
@@ -99,6 +102,7 @@ function InputSystem:MapKeybinds()
                     _onStateChanged:Fire(keybind, false, input)
                 end
             end
+            _bindToKey:fire(input)
         end
     end)
 end

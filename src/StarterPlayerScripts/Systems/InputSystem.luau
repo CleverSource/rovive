@@ -89,7 +89,7 @@ function InputSystem:MapKeybinds()
                 self.States[keybind] = true
                 _onStateChanged:Fire(keybind, true, input)
             end
-            _bindToKey:fire(input)
+            _bindToKey:Fire(input)
         end
     end)
 
@@ -102,7 +102,7 @@ function InputSystem:MapKeybinds()
                     _onStateChanged:Fire(keybind, false, input)
                 end
             end
-            _bindToKey:fire(input)
+            _bindToKey:Fire(input)
         end
     end)
 end
